@@ -238,11 +238,7 @@ class BinaryCLT(Leaf):
                 if reduce == 'mar':
                     messages[self.tree[j], mis_mask] += logsumexp(parent_msg, axis=2)
                 elif reduce == 'mpe':
-                    xs = np.expand_dims(np.arange(len(parent_msg)), axis=1)
-                    idx = np.argmax(parent_msg, axis=2)
-                    msg = parent_msg[xs, :, idx]
-                    messages[self.tree[j], mis_mask, 0] += msg[:, 0, 0]
-                    messages[self.tree[j], mis_mask, 1] += msg[:, 1, 1]
+                    messages[self.tree[j], mis_mask] += np.max(parent_msg, axis=2)
                 else:
                     raise ValueError("Unknown reduce method called {}".format(reduce))
 
@@ -308,19 +304,15 @@ class BinaryCLT(Leaf):
 
         # Compute MPE at the root feature
         mask = mis_mask[:, self.root]
-        msg = np.expand_dims(messages[self.root, mask, 0], axis=1)
-        log_probs = self.params[self.root, 0] + msg
-        x[mask, self.root] = np.argmax(log_probs, axis=1)
+        msg = self.params[self.root, 0] + messages[self.root, mask]
+        x[mask, self.root] = np.argmax(msg, axis=1)
 
         # Compute MPE at the other features, by using the accumulated messages
         for j in self.bfs[1:]:
             mask = mis_mask[:, j]
-            msg = np.expand_dims(messages[j, mask], axis=1)
-            xs = np.arange(len(msg))
-            log_probs = self.params[j] + msg
-            mpe_indices = np.argmax(log_probs, axis=2)
             obs_parent_values = x[mask, self.tree[j]].astype(np.int64)
-            x[mask, j] = mpe_indices[xs, obs_parent_values]
+            msg = self.params[j, obs_parent_values] + messages[j, mask]
+            x[mask, j] = np.argmax(msg, axis=1)
         return x
 
     def sample(self, x: np.ndarray) -> np.ndarray:
@@ -333,16 +325,14 @@ class BinaryCLT(Leaf):
 
         # Sample the root feature
         mask = mis_mask[:, self.root]
-        msg = messages[self.root, mask, 0]
-        log_probs = self.params[self.root, 0, 1] + msg
+        log_probs = self.params[self.root, 0, 1] + messages[self.root, mask, 1]
         x[mask, self.root] = ss.bernoulli.rvs(np.exp(log_probs))
 
         # Sample the other features, by using the accumulated messages
         for j in self.bfs[1:]:
             mask = mis_mask[:, j]
             obs_parent_values = x[mask, self.tree[j]].astype(np.int64)
-            msg = messages[j, mask, obs_parent_values]
-            log_probs = self.params[j, obs_parent_values, 1] + msg
+            log_probs = self.params[j, obs_parent_values, 1] + messages[j, mask, obs_parent_values]
             x[mask, j] = ss.bernoulli.rvs(np.exp(log_probs))
         return x
 
