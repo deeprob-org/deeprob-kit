@@ -45,10 +45,10 @@ pip install deeprob-kit
 ```
 ```shell
 # Install from `main` git branch
-pip install -e git+https://github.com/loreloc/deeprob-kit.git@main#egg=deeprob-kit
+pip install -e git+https://github.com/deeprob-org/deeprob-kit.git@main#egg=deeprob-kit
 ```
 The documentation is generated automatically by Sphinx (with Read-the-Docs theme), and it's hosted using GitHub Pages
-at [deeprob-kit](https://loreloc.github.io/deeprob-kit/).
+at [deeprob-kit]().
 
 ## Datasets and Experiments
 A collection of 29 binary datasets, which most of them are used in Probabilistic Circuits literature,
