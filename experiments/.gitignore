@@ -1,8 +1,11 @@
 datasets/*
+!datasets/.keep
+
 dgcspn
 flows
 ratspn
 spn
+
 *.pt
 *.png
 *.json
