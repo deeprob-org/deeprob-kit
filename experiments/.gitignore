@@ -1,0 +1,8 @@
+datasets/*
+dgcspn
+flows
+ratspn
+spn
+*.pt
+*.png
+*.json

@@ -1,0 +1,14 @@
+@import url("theme.css");
+
+body {
+    --ksu-purple: #542188ff;
+    --rust: #bf3100ff;
+    --harvest-gold: #de8d0bff;
+    --dark-moss-green: #3f612dff;
+    --indigo-dye: #083d77ff;
+    --max-width: 60%;
+}
+
+.wy-nav-content {
+    max-width: var(--max-width);
+}
