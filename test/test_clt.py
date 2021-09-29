@@ -1,9 +1,8 @@
 import unittest
 import tempfile
-import numpy as np
 
-from itertools import product
 from experiments.datasets import load_binary_dataset
+from test.utils import *
 
 from deeprob.spn.utils.validity import is_structured_decomposable
 from deeprob.spn.structure.cltree import BinaryCLT
@@ -20,15 +19,19 @@ class TestCLT(unittest.TestCase):
         random_state = np.random.RandomState(42)
         data, _, _ = load_binary_dataset('experiments/datasets', 'nltcs', raw=True)
         data = data.astype(np.float32)
+        cls.root_id = 1
         cls.n_samples, cls.n_features = data.shape
-        cls.evi_data = data[random_state.choice(len(data), size=5000)]
-        cls.mar_data = cls.evi_data.copy()
-        cls.mar_data[random_state.rand(*cls.mar_data.shape) < 0.2] = np.nan
-        cls.complete_data = np.array([list(i) for i in product([0, 1], repeat=cls.n_features)], dtype=np.float32)
+        cls.evi_data = build_resampled_data(data, 5000, random_state)
+        cls.mar_data = build_random_mar_data(cls.evi_data, 0.2, random_state)
+
+        cls.complete_data = build_complete_data(cls.n_features)
+        mar_features = [1, 5, 9]
+        cls.complete_mar_data = build_complete_mar_data(cls.n_features, mar_features)
+        cls.complete_mpe_data = build_complete_mpe_data(cls.n_features, mar_features)
 
     def __learn_binary_clt(self):
         scope = list(range(self.n_features))
-        clt = BinaryCLT(scope)
+        clt = BinaryCLT(scope, root=self.root_id)
         clt.fit(self.evi_data, [[0, 1]] * self.n_features, alpha=0.1, random_state=42)
         return clt
 
@@ -52,6 +55,14 @@ class TestCLT(unittest.TestCase):
         mpe_ll = clt.log_likelihood(mpe_data).mean()
         self.assertFalse(np.any(np.isnan(mpe_data)))
         self.assertGreater(mpe_ll, evi_ll)
+
+    def test_mpe_complete_inference(self):
+        clt = self.__learn_binary_clt()
+        complete_lls = clt.log_likelihood(self.complete_data)
+        mpe_data = clt.mpe(self.complete_mar_data)
+        mpe_ids = binary_samples_ids(mpe_data).tolist()
+        expected_mpe_ids = compute_mpe_ids(self.complete_data, self.complete_mpe_data, complete_lls.squeeze())
+        self.assertEqual(mpe_ids, expected_mpe_ids)
 
     def test_pc_conversion(self):
         clt = self.__learn_binary_clt()

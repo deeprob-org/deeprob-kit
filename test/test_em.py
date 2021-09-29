@@ -2,12 +2,14 @@ import unittest
 import numpy as np
 
 from sklearn.datasets import make_blobs
+from experiments.datasets import load_binary_dataset
+from test.utils import build_resampled_data
+
 from deeprob.spn.structure.node import Sum, Product
 from deeprob.spn.structure.leaf import Bernoulli, Gaussian
 from deeprob.spn.learning.wrappers import learn_estimator
 from deeprob.spn.algorithms.inference import log_likelihood
 from deeprob.spn.learning.em import expectation_maximization
-from experiments.datasets import load_binary_dataset
 
 
 class TestEM(unittest.TestCase):
@@ -20,7 +22,7 @@ class TestEM(unittest.TestCase):
         data, _, _ = load_binary_dataset('experiments/datasets', 'nltcs', raw=True)
         data = data.astype(np.float32)
         cls.n_samples, cls.n_features = data.shape
-        cls.evi_data = data[random_state.choice(len(data), size=5000)]
+        cls.evi_data = build_resampled_data(data, 5000, random_state)
         cls.blobs_data, _ = make_blobs(
             n_samples=1000, n_features=2, random_state=1337,
             centers=[[-1.0, 1.0], [1.0, -1.0]], cluster_std=0.25
