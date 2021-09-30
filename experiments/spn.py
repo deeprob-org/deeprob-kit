@@ -1,9 +1,4 @@
-import sys, os
-sys.path.append(r'C:\Users\fede9\Desktop\Tesi\deeprob-kit')
-#sys.path.append(r'C:\Users\fede9\Desktop\Tesi\deeprob-kit\experiments')
-# working directory
-os.chdir(r'C:\Users\fede9\Desktop\Tesi\deeprob-kit')
-
+import os
 import time
 import json
 import argparse
@@ -69,12 +64,12 @@ if __name__ == '__main__':
     # Load the dataset
     if args.dataset in BINARY_DATASETS:
         data_train, data_valid, data_test = load_binary_dataset(
-            'experiments/datasets', args.dataset, raw=True
+            'datasets', args.dataset, raw=True
         )
     else:
         transform = DataStandardizer()
         data_train, data_valid, data_test = load_continuous_dataset(
-            'experiments/datasets', args.dataset, raw=True, random_state=args.seed
+            'datasets', args.dataset, raw=True, random_state=args.seed
         )
         transform.fit(data_train)
         data_train = transform.forward(data_train)
