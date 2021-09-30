@@ -1,0 +1,37 @@
+{
+    "log_likelihood": {
+        "valid": {
+            "mean": -99.26056671142578,
+            "stddev": 0.630756950378418
+        },
+        "test": {
+            "mean": -99.021240234375,
+            "stddev": 0.3740971917407921
+        }
+    },
+    "learning_time": 1.0269373,
+    "statistics": {
+        "n_nodes": 470,
+        "n_sum": 20,
+        "n_prod": 40,
+        "n_leaves": 410,
+        "n_edges": 469,
+        "n_params": 450,
+        "depth": 6
+    },
+    "settings": {
+        "dataset": "dna",
+        "learn_leaf": "mle",
+        "split_rows": "kmeans_mb",
+        "split_cols": "rgvs",
+        "min_rows_slice": 500,
+        "min_cols_slice": 2,
+        "n_clusters": 2,
+        "gtest_threshold": 5.0,
+        "rdc_threshold": 0.3,
+        "ebvs_threshold": 0.3,
+        "smoothing": 0.1,
+        "seed": 42,
+        "verbose": true
+    }
+}

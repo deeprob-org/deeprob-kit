@@ -1,4 +1,9 @@
-import os
+import sys, os
+sys.path.append(r'C:\Users\fede9\Desktop\Tesi\deeprob-kit')
+#sys.path.append(r'C:\Users\fede9\Desktop\Tesi\deeprob-kit\experiments')
+# working directory
+os.chdir(r'C:\Users\fede9\Desktop\Tesi\deeprob-kit')
+
 import time
 import json
 import argparse
@@ -26,11 +31,11 @@ if __name__ == '__main__':
         help="The method for leaf learning."
     )
     parser.add_argument(
-        '--split-rows', choices=['kmeans', 'gmm', 'rdc', 'random'], default='gmm',
+        '--split-rows', choices=['kmeans', 'kmeans_mb', 'gmm', 'dbscan', 'wald', 'rdc', 'random'], default='gmm',
         help="The splitting rows method."
     )
     parser.add_argument(
-        '--split-cols', choices=['gvs', 'rdc', 'random'], default='gvs',
+        '--split-cols', choices=['gvs', 'rgvs', 'wrgvs', 'ebvs', 'ebvs_ae', 'gbvs', 'gbvs_ag', 'rdc', 'random'], default='gvs',
         help="The splitting columns method."
     )
     parser.add_argument(
@@ -49,6 +54,8 @@ if __name__ == '__main__':
         '--rdc-threshold', type=float, default=0.3, help="The threshold for the RDC independence test."
     )
     parser.add_argument(
+        '--ebvs-threshold', type=float, default=0.3, help='The threshold for the Entropy/Gini column splitting')
+    parser.add_argument(
         '--smoothing', type=float, default=0.1, help="The Laplace smoothing value."
     )
     parser.add_argument(
@@ -62,12 +69,12 @@ if __name__ == '__main__':
     # Load the dataset
     if args.dataset in BINARY_DATASETS:
         data_train, data_valid, data_test = load_binary_dataset(
-            'datasets', args.dataset, raw=True
+            'experiments/datasets', args.dataset, raw=True
         )
     else:
         transform = DataStandardizer()
         data_train, data_valid, data_test = load_continuous_dataset(
-            'datasets', args.dataset, raw=True, random_state=args.seed
+            'experiments/datasets', args.dataset, raw=True, random_state=args.seed
         )
         transform.fit(data_train)
         data_train = transform.forward(data_train)
@@ -96,15 +103,22 @@ if __name__ == '__main__':
 
     # Set the split rows method parameters
     split_rows_kwargs = dict()
-    if args.split_rows in ['gmm', 'kmeans']:
+    if args.split_rows in ['kmeans', 'gmm', 'wald', 'kmeans_mb']:
         split_rows_kwargs['n'] = args.n_clusters
 
     # Set the split columns method parameters
     split_cols_kwargs = dict()
-    if args.split_cols == 'gvs':
+    if args.split_cols in ['gvs', 'rgvs', 'wrgvs']:
         split_cols_kwargs['p'] = args.gtest_threshold
     elif args.split_cols == 'rdc':
         split_cols_kwargs['d'] = args.rdc_threshold
+    elif args.split_cols in ['ebvs', 'gbvs']:
+        split_cols_kwargs['a'] = args.smoothing
+        split_cols_kwargs['e'] = args.ebvs_threshold
+    elif args.split_cols in ['ebvs_ae', 'gbvs_ag']:
+        split_cols_kwargs['a'] = args.smoothing
+        split_cols_kwargs['e'] = args.ebvs_threshold
+        split_cols_kwargs['size'] = data_train.shape[0]
 
     # Learn a SPN density estimator
     start_time = time.perf_counter()

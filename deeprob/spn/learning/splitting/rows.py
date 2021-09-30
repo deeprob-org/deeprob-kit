@@ -3,7 +3,7 @@ import numpy as np
 from typing import Union, Type, Tuple, List, Callable, Any
 
 from deeprob.spn.structure.leaf import Leaf
-from deeprob.spn.learning.splitting.cluster import gmm, kmeans
+from deeprob.spn.learning.splitting.cluster import gmm, kmeans, kmeans_mb, dbscan, wald
 from deeprob.spn.learning.splitting.rdc import rdc_rows
 from deeprob.spn.learning.splitting.random import random_rows
 
@@ -51,6 +51,12 @@ def get_split_rows_method(split_rows: str) -> SplitRowsFunc:
     """
     if split_rows == 'kmeans':
         return kmeans
+    elif split_rows == 'kmeans_mb':
+        return kmeans_mb
+    elif split_rows == 'dbscan':
+        return dbscan
+    elif split_rows == 'wald':
+        return wald
     elif split_rows == 'gmm':
         return gmm
     elif split_rows == 'rdc':

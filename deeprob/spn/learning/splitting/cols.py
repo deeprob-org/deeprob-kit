@@ -3,7 +3,9 @@ import numpy as np
 from typing import Union, Type, Tuple, List, Callable, Any
 
 from deeprob.spn.structure.leaf import Leaf
-from deeprob.spn.learning.splitting.gvs import gvs_cols
+from deeprob.spn.learning.splitting.gvs import gvs_cols, rgvs_cols, wrgvs_cols
+from deeprob.spn.learning.splitting.entropy import entropy_cols, entropy_adaptive_cols
+from deeprob.spn.learning.splitting.gini import gini_cols, gini_adaptive_cols
 from deeprob.spn.learning.splitting.rdc import rdc_cols
 from deeprob.spn.learning.splitting.random import random_cols
 
@@ -53,6 +55,18 @@ def get_split_cols_method(split_cols: str) -> SplitColsFunc:
     """
     if split_cols == 'gvs':
         return gvs_cols
+    elif split_cols == 'rgvs':
+        return rgvs_cols
+    elif split_cols == 'wrgvs':
+        return wrgvs_cols
+    elif split_cols == 'ebvs':
+        return entropy_cols
+    elif split_cols == 'ebvs_ae':
+        return entropy_adaptive_cols
+    elif split_cols == 'gbvs':
+        return gini_cols
+    elif split_cols == 'gbvs_ag':
+        return gini_adaptive_cols
     elif split_cols == 'rdc':
         return rdc_cols
     elif split_cols == 'random':

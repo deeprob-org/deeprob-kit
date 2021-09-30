@@ -8,7 +8,7 @@ from deeprob.utils.random import RandomState, check_random_state
 from deeprob.spn.structure.node import Node
 from deeprob.spn.algorithms.inference import log_likelihood
 from deeprob.torch.base import ProbabilisticModel
-from deeprob.torch.routines import train_model, test_model
+#from deeprob.torch.routines import train_model, test_model
 from deeprob.torch.datasets import UnsupervisedDataset, SupervisedDataset, WrappedDataset
 
 
