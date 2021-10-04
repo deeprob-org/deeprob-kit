@@ -108,10 +108,10 @@ if __name__ == '__main__':
     elif args.split_cols == 'rdc':
         split_cols_kwargs['d'] = args.rdc_threshold
     elif args.split_cols in ['ebvs', 'gbvs']:
-        split_cols_kwargs['a'] = args.smoothing
+        split_cols_kwargs['alpha'] = args.smoothing
         split_cols_kwargs['e'] = args.ebvs_threshold
     elif args.split_cols in ['ebvs_ae', 'gbvs_ag']:
-        split_cols_kwargs['a'] = args.smoothing
+        split_cols_kwargs['alpha'] = args.smoothing
         split_cols_kwargs['e'] = args.ebvs_threshold
         split_cols_kwargs['size'] = data_train.shape[0]
 

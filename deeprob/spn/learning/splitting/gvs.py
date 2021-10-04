@@ -137,8 +137,7 @@ def wrgvs_cols(
     
     part_0 = set(rand_perm[partition_gvs == 0])
     part_1 = set(rand_perm[partition_gvs == 1])
-    #part_0_el = sample(list(part_0), 1)[0]
-    #part_1_el = sample(list(part_1), 1)[0]
+    
     part_0_el = random_state.choice(list(part_0), 1, replace = False)[0]
     part_1_el = random_state.choice(list(part_1), 1, replace = False)[0]
     

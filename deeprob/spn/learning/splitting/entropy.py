@@ -2,8 +2,8 @@ import numpy as np
 
 from typing import Union, Type, List
 
-from deeprob.spn.structure.leaf import LeafType, Leaf
-  
+from deeprob.spn.structure.leaf import Leaf, LeafType
+from deeprob.utils.statistics import compute_entropy
 
 def entropy_cols(
         data: np.ndarray, 
@@ -11,25 +11,32 @@ def entropy_cols(
         domains: List[Union[list, tuple]], 
         random_state: np.random.RandomState,
         e: float = 0.3, 
-        a: float = 1.0
+        alpha: float = 1.0
 ) -> np.ndarray:
-    '''
+    """
     Compute Entropy based splitting
     
-    param data : the data
-    param distributions : distributions of the features
-    param domains : range of values of the features
-    param e : threshold of the considered entropy to be signficant
-    param a : laplacian alpha to apply at frequence
-    return : a partitioning of features
-    '''
+    :param data: The data.
+    :param distributions: Distributions of the features.
+    :param domains: Range of values of the features.
+    :param e: Threshold of the considered entropy to be signficant.
+    :param alpha: laplacian alpha to apply at frequence.
+    :return: A partitioning of features.
+    """
+    
     _, n_features = data.shape
     partition = np.zeros(n_features, dtype=int)
     
     # compute entropy for each variable
     for i in range(n_features):
-        entropy = compute_entropy(data, i, distributions, np.array(domains), a)
         
+        if distributions[i].LEAF_TYPE == LeafType.DISCRETE: # discrete
+            entropy = compute_entropy(data, i, np.array(domains), 'discrete', alpha)
+        elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS: # continuous
+            entropy = compute_entropy(data, i, np.array(domains), 'continuous', alpha)
+        else:
+            raise ValueError('Leaves distributions must be either discrete or continuous')
+            
         # add to cluster if entropy less than treshold
         if entropy < e :
             partition[i] = 1
@@ -42,28 +49,37 @@ def entropy_adaptive_cols(
         domains: List[Union[list, tuple]], 
         random_state: np.random.RandomState, 
         e: float = 0.3, 
-        a: float = 1.0, 
+        alpha: float = 1.0, 
         size: int = None
 ) -> np.ndarray:
-    '''
+    """
     Compute Adaptive Entropy based splitting 
     
-    param data : the data
-    param distributions : distributions of the features
-    param domains : range of values of the features
-    param e : threshold of the considered entropy to be signficant
-    param a : laplacian alpha to apply at frequence
-    param size : size of whole dataset 
-    return : a partitioning of features
-    '''
-    assert size is not None, "No size in entropy adaptive"
+    :param data: The data.
+    :param distributions: Distributions of the features.
+    :param domains: Range of values of the features.
+    :param e: Threshold of the considered entropy to be signficant.
+    :param alpha: laplacian alpha to apply at frequence.
+    :param size: Size of whole dataset.
+    :return: A partitioning of features.
+    :raises ValueError: If the size of the data is missing.
+    """
+    
+    if size is None:
+        raise ValueError("Missing size input for entropy adaptive computation")
     
     _, n_features = data.shape
     partition = np.zeros(n_features, dtype=int)
     
     # compute entropy for each variable
     for i in range(n_features):
-        entropy = compute_entropy(data, i, distributions, np.array(domains), a)
+        
+        if distributions[i].LEAF_TYPE == LeafType.DISCRETE: # discrete
+            entropy = compute_entropy(data, i, np.array(domains), 'discrete', alpha)
+        elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS: # continuous
+            entropy = compute_entropy(data, i, np.array(domains), 'continuous', alpha)
+        else:
+            raise ValueError('Leaves distributions must be either discrete or continuous')
         
         # adaptive_entropy
         e = max(e * (data.shape[0] / size), 1e-07)
@@ -73,50 +89,3 @@ def entropy_adaptive_cols(
             partition[i] = 1
         
     return partition
-
-
-def compute_entropy(
-        data: np.ndarray, 
-        idx: int, 
-        distributions: List[Type[Leaf]], 
-        domains: List[Union[list, tuple]], 
-        a: float
-) -> float:
-    '''
-    Computes Entropy of a feature 
-    
-    param data : the data
-    param idx : index of the feature
-    param domains : domain of the feature (numpy array)
-    param a : laplacian alpha to apply at frequence
-
-    return: value of the entropy
-
-    '''
-    
-    if distributions[idx].LEAF_TYPE == LeafType.DISCRETE: # binary
-    
-        one_counts = np.sum(data[:, idx])
-        zero_counts = len(data[:, idx]) - one_counts
-        smoth_freq = np.array([one_counts, zero_counts]) + a
-        
-        probs = smoth_freq / (data.shape[0] + (domains[idx] * a))
-        log_probs = np.log2(probs)
-        
-        ent = -(probs * log_probs).sum()
-    
-    else: # continue
-
-        bins = np.ceil(np.cbrt(data[:, idx].shape[0])).astype(np.int)
-        hist, bin_edges = np.histogram(data[:, idx], bins=bins)
-        smoth_freq = np.array(hist) + a
-      
-        probs = smoth_freq / (data.shape[0] + (bin_edges[1:] * a))
-        log_probs = np.log2(probs)
-        
-        ent = - (probs * log_probs).sum() / np.log2(bins)
-    
-    if ent >1: ent = 1.0
-    if ent <0: ent = 0.0
-    
-    return ent
