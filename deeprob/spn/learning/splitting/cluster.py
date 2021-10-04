@@ -32,7 +32,7 @@ def gmm(
 
     # Apply GMM
     with warnings.catch_warnings():
-        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings for GMM
+        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings
         return mixture.GaussianMixture(n, n_init=3, random_state=random_state).fit_predict(data)
 
 
@@ -59,7 +59,7 @@ def kmeans(
 
     # Apply K-Means
     with warnings.catch_warnings():
-        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings for K-Means
+        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings
         return cluster.KMeans(n, n_init=5, random_state=random_state).fit_predict(data)
 
 
@@ -84,10 +84,10 @@ def kmeans_mb(
     if any([len(d) > 2 for d in domains]):
         data = mixed_ohe_data(data, domains)
 
-    # Apply K-Means
+    # Apply K-Means MiniBatch
     with warnings.catch_warnings():
-        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings for K-Means
-        warnings.simplefilter(action='ignore', category=UserWarning)  # Ignore user warnings for K-Means
+        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings
+        warnings.simplefilter(action='ignore', category=UserWarning)  # Ignore user warnings
         return cluster.MiniBatchKMeans(n, n_init=5, random_state=random_state).fit_predict(data)
 
 
@@ -117,9 +117,9 @@ def dbscan(
     if any([len(d) > 2 for d in domains]):
         data = mixed_ohe_data(data, domains)
 
-    # Apply K-Means
+    # Apply DBSCAN
     with warnings.catch_warnings():
-        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings for K-Means
+        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings
         return cluster.DBSCAN(eps = 0.25, n_jobs=-1).fit_predict(data)
 
 
@@ -149,9 +149,9 @@ def wald(
     if any([len(d) > 2 for d in domains]):
         data = mixed_ohe_data(data, domains)
 
-    # Apply K-Means
+    # Apply Wald
     with warnings.catch_warnings():
-        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings for K-Means
+        warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings
         return cluster.AgglomerativeClustering(n, linkage='ward').fit_predict(data)
 
 

@@ -31,9 +31,9 @@ def entropy_cols(
     for i in range(n_features):
         
         if distributions[i].LEAF_TYPE == LeafType.DISCRETE: # discrete
-            entropy = compute_entropy(data, i, np.array(domains), 'discrete', alpha)
+            entropy = compute_entropy(data[:, i], np.array(domains[i]), 'discrete', alpha)
         elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS: # continuous
-            entropy = compute_entropy(data, i, np.array(domains), 'continuous', alpha)
+            entropy = compute_entropy(data[:, i], np.array(domains[i]), 'continuous', alpha)
         else:
             raise ValueError('Leaves distributions must be either discrete or continuous')
             
@@ -75,9 +75,9 @@ def entropy_adaptive_cols(
     for i in range(n_features):
         
         if distributions[i].LEAF_TYPE == LeafType.DISCRETE: # discrete
-            entropy = compute_entropy(data, i, np.array(domains), 'discrete', alpha)
+            entropy = compute_entropy(data[:, i], np.array(domains[i]), 'discrete', alpha)
         elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS: # continuous
-            entropy = compute_entropy(data, i, np.array(domains), 'continuous', alpha)
+            entropy = compute_entropy(data[:, i], np.array(domains[i]), 'continuous', alpha)
         else:
             raise ValueError('Leaves distributions must be either discrete or continuous')
         

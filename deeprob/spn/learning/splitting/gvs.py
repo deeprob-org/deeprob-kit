@@ -44,7 +44,7 @@ def gvs_cols(
                 features_queue.append(other_feature)
         features_set = features_set.difference(features_remove)
 
-    partition = np.zeros(n_features, dtype=np.int32)
+    partition = np.zeros(n_features, dtype=np.int64)
     partition[list(dependent_features_set)] = 1
     return partition
 
@@ -67,7 +67,7 @@ def rgvs_cols(
     :raises ValueError: If the leaf distributions are discrete and continuous.
     """
     _, n_features = data.shape
-    k = np.int( np.max([np.sqrt(n_features), 2]) )
+    k = np.int(np.max([np.sqrt(n_features),2]))
     
     if k == n_features: 
         return gvs_cols(data, distributions, domains, random_state, p)
@@ -83,16 +83,16 @@ def rgvs_cols(
     partition_gvs = gvs_cols(data_gvs, distributions_gvs, domains_gvs, random_state, p)
         
     if (partition_gvs != 1).all():
-        partition = np.zeros(n_features, dtype=np.int)
+        partition = np.zeros(n_features, dtype=np.int64)
         return partition
     
     r = bernoulli.rvs(0.5, size=1)
     if r[0] == 0:
         # excluded in first cluster 0
-        partition = np.zeros(n_features, dtype=np.int)
+        partition = np.zeros(n_features, dtype=np.int64)
     else:
         # excluded in second cluster 1
-        partition = np.ones(n_features, dtype=np.int)
+        partition = np.ones(n_features, dtype=np.int64)
         
     partition[rand_perm] = partition_gvs  
     return partition
@@ -116,7 +116,7 @@ def wrgvs_cols(
     :raises ValueError: If the leaf distributions are discrete and continuous.
     """
     _, n_features = data.shape
-    k = np.int( np.max([np.sqrt(n_features), 2]) )
+    k = np.int( np.max([np.sqrt(n_features),2]))
     
     if k == n_features: 
         return gvs_cols(data, distributions, domains, random_state, p)
@@ -131,16 +131,14 @@ def wrgvs_cols(
 
     partition_gvs = gvs_cols(data_gvs, distributions_gvs, domains_gvs, random_state, p)
         
-    if ( (partition_gvs != 1).all() ) or ( (partition_gvs != 0).all() ):
-        partition = np.zeros(n_features, dtype=np.int)
+    if ((partition_gvs != 1).all()) or ((partition_gvs != 0).all()):
+        partition = np.zeros(n_features, dtype=np.int64)
         return partition
     
     part_0 = set(rand_perm[partition_gvs == 0])
     part_1 = set(rand_perm[partition_gvs == 1])
-    
     part_0_el = random_state.choice(list(part_0), 1, replace = False)[0]
     part_1_el = random_state.choice(list(part_1), 1, replace = False)[0]
-    
     feature_excluded = set(range(n_features)) - set(rand_perm)
     
     for f_i in feature_excluded:
@@ -149,10 +147,8 @@ def wrgvs_cols(
             part_0.add(f_i)
         else:
             part_1.add(f_i)
-    
-    assert len(part_0)+len(part_1) == n_features, "Error - wrgvs partitioning"
-    
-    partition = np.zeros(n_features, dtype=np.int)
+
+    partition = np.zeros(n_features, dtype=np.int64)
     partition[list(part_1)] = 1  
     return partition
 
@@ -187,7 +183,7 @@ def gtest(
         b2 = domains[j] + [len(domains[j])]
         hist, _, _ = np.histogram2d(x1, x2, bins=[b1, b2])
     elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS and distributions[j].LEAF_TYPE == LeafType.CONTINUOUS:
-        bins = np.ceil(np.cbrt(n_samples)).astype(np.int)
+        bins = np.ceil(np.cbrt(n_samples)).astype(np.int64)
         hist, _, _ = np.histogram2d(x1, x2, bins=bins)
     else:
         raise ValueError('Leaves distributions must be either discrete or continuous')
@@ -205,7 +201,6 @@ def gtest(
                 g += c * np.log(c / e)
     g_val = 2.0 * g
     p_thresh = 2.0 * dof * p
-    
     
     if test: # if test 
         return g_val < p_thresh
