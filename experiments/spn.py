@@ -26,11 +26,11 @@ if __name__ == '__main__':
         help="The method for leaf learning."
     )
     parser.add_argument(
-        '--split-rows', choices=['kmeans', 'gmm', 'rdc', 'random'], default='gmm',
+        '--split-rows', choices=['kmeans', 'kmeans_mb', 'gmm', 'dbscan', 'wald', 'rdc', 'random'], default='gmm',
         help="The splitting rows method."
     )
     parser.add_argument(
-        '--split-cols', choices=['gvs', 'rdc', 'random'], default='gvs',
+        '--split-cols', choices=['gvs', 'rgvs', 'wrgvs', 'ebvs', 'ebvs_ae', 'gbvs', 'gbvs_ag', 'rdc', 'random'], default='gvs',
         help="The splitting columns method."
     )
     parser.add_argument(
@@ -48,6 +48,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--rdc-threshold', type=float, default=0.3, help="The threshold for the RDC independence test."
     )
+    parser.add_argument(
+        '--ebvs-threshold', type=float, default=0.3, help='The threshold for the Entropy/Gini column splitting')
     parser.add_argument(
         '--smoothing', type=float, default=0.1, help="The Laplace smoothing value."
     )
@@ -96,15 +98,22 @@ if __name__ == '__main__':
 
     # Set the split rows method parameters
     split_rows_kwargs = dict()
-    if args.split_rows in ['gmm', 'kmeans']:
+    if args.split_rows in ['kmeans', 'gmm', 'wald', 'kmeans_mb']:
         split_rows_kwargs['n'] = args.n_clusters
 
     # Set the split columns method parameters
     split_cols_kwargs = dict()
-    if args.split_cols == 'gvs':
+    if args.split_cols in ['gvs', 'rgvs', 'wrgvs']:
         split_cols_kwargs['p'] = args.gtest_threshold
     elif args.split_cols == 'rdc':
         split_cols_kwargs['d'] = args.rdc_threshold
+    elif args.split_cols in ['ebvs', 'gbvs']:
+        split_cols_kwargs['alpha'] = args.smoothing
+        split_cols_kwargs['e'] = args.ebvs_threshold
+    elif args.split_cols in ['ebvs_ae', 'gbvs_ag']:
+        split_cols_kwargs['alpha'] = args.smoothing
+        split_cols_kwargs['e'] = args.ebvs_threshold
+        split_cols_kwargs['size'] = data_train.shape[0]
 
     # Learn a SPN density estimator
     start_time = time.perf_counter()
