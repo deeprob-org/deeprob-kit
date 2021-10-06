@@ -1,6 +1,8 @@
 import unittest
 import tempfile
 
+import numpy as np
+
 from experiments.datasets import load_binary_dataset
 from test.utils import *
 
@@ -28,6 +30,8 @@ class TestCLT(unittest.TestCase):
         mar_features = [1, 5, 9]
         cls.complete_mar_data = build_complete_mar_data(cls.n_features, mar_features)
         cls.complete_mpe_data = build_complete_mpe_data(cls.n_features, mar_features)
+
+        cls.approx_iter = 250
 
     def __learn_binary_clt(self):
         scope = list(range(self.n_features))
@@ -63,6 +67,19 @@ class TestCLT(unittest.TestCase):
         mpe_ids = binary_samples_ids(mpe_data).tolist()
         expected_mpe_ids = compute_mpe_ids(self.complete_data, self.complete_mpe_data, complete_lls.squeeze())
         self.assertEqual(mpe_ids, expected_mpe_ids)
+
+    def test_ancestral_sampling(self):
+        clt = self.__learn_binary_clt()
+        evi_ll = clt.log_likelihood(self.evi_data).mean()
+        np.random.seed(42)
+        samples = np.empty(shape=(10000, self.n_features), dtype=np.float32)
+        approx_lls = list()
+        for _ in range(self.approx_iter):
+            samples[:] = np.nan
+            samples = clt.sample(samples)
+            approx_lls.extend(clt.log_likelihood(samples).squeeze().tolist())
+        approx_ll = np.mean(approx_lls).item()
+        self.assertAlmostEqual(evi_ll, approx_ll, places=2)
 
     def test_pc_conversion(self):
         clt = self.__learn_binary_clt()
