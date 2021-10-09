@@ -1,9 +1,8 @@
 import unittest
 import tempfile
-import numpy as np
 
-from itertools import product
 from experiments.datasets import load_binary_dataset
+from test.utils import *
 
 from deeprob.spn.utils.statistics import compute_statistics
 from deeprob.spn.utils.filter import filter_nodes_by_type
@@ -29,20 +28,21 @@ class TestSPN(unittest.TestCase):
         data, _, _ = load_binary_dataset('experiments/datasets', 'nltcs', raw=True)
         data = data.astype(np.float32)
         cls.n_samples, cls.n_features = data.shape
-        cls.evi_data = data[random_state.choice(len(data), size=5000)]
-        cls.mar_data = cls.evi_data.copy()
-        cls.mar_data[random_state.rand(*cls.mar_data.shape) < 0.2] = np.nan
+        cls.evi_data = resample_data(data, 5000, random_state)
+        cls.mar_data = random_marginalize_data(cls.evi_data, 0.2, random_state)
+
         cls.clf_index = 3
-        cls.clf_data = cls.evi_data.copy()
-        cls.clf_data[:, cls.clf_index] = np.nan
+        cls.clf_data = marginalize_data(cls.evi_data, [cls.clf_index])
         cls.scope = [5, 7, 9, 15, 8]
-        cls.scope_mar_data = cls.evi_data.copy()
-        cls.scope_mar_data[:, [s for s in range(cls.n_features) if s not in cls.scope]] = np.nan
-        cls.complete_data = np.array([list(i) for i in product([0, 1], repeat=cls.n_features)], dtype=np.float32)
+        mar_scope = [s for s in range(cls.n_features) if s not in cls.scope]
+        cls.scope_mar_data = marginalize_data(cls.evi_data, mar_scope)
+
         cls.binary_square_data = np.stack([
             random_state.binomial(1, 0.3, size=1000),
             random_state.binomial(1, 0.9, size=1000)
         ], axis=1)
+
+        cls.complete_data = complete_binary_data(cls.n_features)
 
     @staticmethod
     def __build_normal_spn():
@@ -135,41 +135,35 @@ class TestSPN(unittest.TestCase):
         spn.children[0].id = 42
         self.assertRaises(ValueError, check_spn, spn)
 
-    def test_mle_complete_inference(self):
+    def test_complete_inference(self):
         spn = self.__learn_spn_mle()
         ls = likelihood(spn, self.complete_data)
         lls = log_likelihood(spn, self.complete_data)
         self.assertAlmostEqual(np.sum(ls).item(), 1.0, places=6)
         self.assertAlmostEqual(np.sum(np.exp(lls)).item(), 1.0, places=6)
-
-    def test_clt_complete_inference(self):
         spn = self.__learn_spn_clt()
         ls = likelihood(spn, self.complete_data)
         lls = log_likelihood(spn, self.complete_data)
         self.assertAlmostEqual(np.sum(ls).item(), 1.0, places=6)
         self.assertAlmostEqual(np.sum(np.exp(lls)).item(), 1.0, places=6)
 
-    def test_mle_mar_inference(self):
+    def test_mar_inference(self):
         spn = self.__learn_spn_mle()
         evi_ll = log_likelihood(spn, self.evi_data).mean()
         mar_ll = log_likelihood(spn, self.mar_data).mean()
         self.assertGreater(mar_ll, evi_ll)
-
-    def test_clt_mar_inference(self):
         spn = self.__learn_spn_clt()
         evi_ll = log_likelihood(spn, self.evi_data).mean()
         mar_ll = log_likelihood(spn, self.mar_data).mean()
         self.assertGreater(mar_ll, evi_ll)
 
-    def test_mle_mpe_inference(self):
+    def test_mpe_inference(self):
         spn = self.__learn_spn_mle()
         evi_ll = log_likelihood(spn, self.evi_data).mean()
         mpe_data = mpe(spn, self.mar_data)
         mpe_ll = log_likelihood(spn, mpe_data).mean()
         self.assertFalse(np.any(np.isnan(mpe_data)))
         self.assertGreater(mpe_ll, evi_ll)
-
-    def test_clt_mpe_inference(self):
         spn = self.__learn_spn_clt()
         evi_ll = log_likelihood(spn, self.evi_data).mean()
         mpe_data = mpe(spn, self.mar_data)
