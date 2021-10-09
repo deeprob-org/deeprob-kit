@@ -1,8 +1,6 @@
 import unittest
 import tempfile
 
-import numpy as np
-
 from experiments.datasets import load_binary_dataset
 from test.utils import *
 
@@ -23,13 +21,13 @@ class TestCLT(unittest.TestCase):
         data = data.astype(np.float32)
         cls.root_id = 1
         cls.n_samples, cls.n_features = data.shape
-        cls.evi_data = build_resampled_data(data, 5000, random_state)
-        cls.mar_data = build_random_mar_data(cls.evi_data, 0.2, random_state)
+        cls.evi_data = resample_data(data, 5000, random_state)
+        cls.mar_data = random_marginalize_data(cls.evi_data, 0.2, random_state)
 
-        cls.complete_data = build_complete_data(cls.n_features)
-        mar_features = [1, 5, 9]
-        cls.complete_mar_data = build_complete_mar_data(cls.n_features, mar_features)
-        cls.complete_mpe_data = build_complete_mpe_data(cls.n_features, mar_features)
+        cls.complete_data = complete_binary_data(cls.n_features)
+        mar_features = [7, cls.root_id, 5, 9]
+        cls.complete_mar_data = complete_marginalized_binary_data(cls.n_features, mar_features)
+        cls.complete_mpe_data = complete_posterior_binary_data(cls.n_features, mar_features)
 
         cls.approx_iter = 250
 
@@ -64,8 +62,8 @@ class TestCLT(unittest.TestCase):
         clt = self.__learn_binary_clt()
         complete_lls = clt.log_likelihood(self.complete_data)
         mpe_data = clt.mpe(self.complete_mar_data)
-        mpe_ids = binary_samples_ids(mpe_data).tolist()
-        expected_mpe_ids = compute_mpe_ids(self.complete_data, self.complete_mpe_data, complete_lls.squeeze())
+        mpe_ids = binary_data_ids(mpe_data).tolist()
+        expected_mpe_ids = compute_mpe_ids(self.complete_mpe_data, complete_lls.squeeze())
         self.assertEqual(mpe_ids, expected_mpe_ids)
 
     def test_ancestral_sampling(self):

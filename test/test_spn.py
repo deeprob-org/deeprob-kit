@@ -28,24 +28,21 @@ class TestSPN(unittest.TestCase):
         data, _, _ = load_binary_dataset('experiments/datasets', 'nltcs', raw=True)
         data = data.astype(np.float32)
         cls.n_samples, cls.n_features = data.shape
-        cls.evi_data = build_resampled_data(data, 5000, random_state)
-        cls.mar_data = build_random_mar_data(cls.evi_data, 0.2, random_state)
+        cls.evi_data = resample_data(data, 5000, random_state)
+        cls.mar_data = random_marginalize_data(cls.evi_data, 0.2, random_state)
 
         cls.clf_index = 3
-        cls.clf_data = build_mar_data(cls.evi_data, [cls.clf_index])
+        cls.clf_data = marginalize_data(cls.evi_data, [cls.clf_index])
         cls.scope = [5, 7, 9, 15, 8]
         mar_scope = [s for s in range(cls.n_features) if s not in cls.scope]
-        cls.scope_mar_data = build_mar_data(cls.evi_data, mar_scope)
+        cls.scope_mar_data = marginalize_data(cls.evi_data, mar_scope)
 
         cls.binary_square_data = np.stack([
             random_state.binomial(1, 0.3, size=1000),
             random_state.binomial(1, 0.9, size=1000)
         ], axis=1)
 
-        cls.complete_data = build_complete_data(cls.n_features)
-        mar_features = [1, 5, 9]
-        cls.complete_mar_data = build_complete_mar_data(cls.n_features, mar_features)
-        cls.complete_mpe_data = build_complete_mpe_data(cls.n_features, mar_features)
+        cls.complete_data = complete_binary_data(cls.n_features)
 
     @staticmethod
     def __build_normal_spn():

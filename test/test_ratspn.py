@@ -2,7 +2,7 @@ import unittest
 import torch
 
 from collections import Counter
-from test.utils import build_complete_data
+from test.utils import complete_binary_data
 
 from deeprob.utils.region import RegionGraph
 from deeprob.spn.models.ratspn import BernoulliRatSpn
@@ -17,7 +17,7 @@ class TestRatSpn(unittest.TestCase):
         torch.manual_seed(42)
         torch.set_grad_enabled(False)
         cls.n_features = 15
-        cls.complete_data = torch.tensor(build_complete_data(cls.n_features), dtype=torch.float32)
+        cls.complete_data = torch.tensor(complete_binary_data(cls.n_features), dtype=torch.float32)
 
     def __build_bernoulli_ratspn(self):
         return BernoulliRatSpn(
