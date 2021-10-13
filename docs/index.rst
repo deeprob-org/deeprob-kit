@@ -5,7 +5,11 @@ A Python library for Deep Probabilistic Modeling
 	:maxdepth: 1
 	:caption: Read Me
 
-	home.md
+	markdown/home.md
+	markdown/docs.md
+	markdown/examples.md
+	markdown/experiments.md
+	markdown/benchmark.md
 
 .. toctree::
 	:maxdepth: 5
