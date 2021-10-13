@@ -27,8 +27,8 @@ Some models are implemented using *PyTorch* for fast training and inference on G
 - Deep Generalized Convolutional SPNs (DGC-SPNs) using PyTorch. <sup>[11](#r11)</sup>
 
 The collection of implemented models is summarized in the following table.
-The supported data dimensionality for each model is showed in the **Input Dimensionality** column.
-Moreover, the **Supervised** column tells which model is suitable for a supervised learning task,
+The supported data dimensionality for each model is showed in the *Input Dimensionality* column.
+Moreover, the *Supervised* column tells which model is suitable for a supervised learning task,
 other than density estimation task.
 
 | Model      | Description                                        | Input Dimensionality | Supervised |
@@ -56,24 +56,26 @@ The documentation is generated automatically by Sphinx (with Read-the-Docs theme
 at [deeprob-kit]().
 
 ## Datasets and Experiments
-A collection of 29 binary datasets, which most of them are used in Probabilistic Circuits literature,
+A collection of 29 binary datasets, which most of them are used in *Probabilistic Circuits* literature,
 can be found at [UCLA-StarAI-Binary-Datasets](https://github.com/UCLA-StarAI/Density-Estimation-Datasets).
-
-Moreover, a collection of 5 continuous datasets, commonly present in works regarding Normalizing Flows,
+Moreover, a collection of 5 continuous datasets, commonly present in works regarding *Normalizing Flows*,
 can be found at [MAF-Continuous-Datasets](https://zenodo.org/record/1161203#.Wmtf_XVl8eN).
 
-After downloading them, the datasets must be stored in the `experiments/datasets` directory to be able to run the experiments
-(and Unit Tests).
+In order to run the experiments, it is necessary to clone the repository.
+After downloading them, the datasets must be stored in the `experiments/datasets` directory to be able to
+run the experiments (and also Unit Tests).
 The experiments scripts are available in the `experiments` directory and can be launched using the command line
 by specifying the dataset and hyper-parameters.
 
 ## Code Examples
 A collection of code examples can be found in the `examples` directory.
-However, the examples are not intended to produce state-of-the-art results,
+In order to run the code examples, it is necessary clone the repository.
+However, additional datasets are not required.
+Note that the given examples are not intended to produce state-of-the-art results,
 but only to present the library.
 
 The following table contains a description about them and a code complexity ranging from one to three stars.
-The **Complexity** column consists of a measure that roughly represents how many features of the library are used, as well as
+The *Complexity* column consists of a measure that roughly represents how many features of the library are used, as well as
 the expected time required to run the script.
 
 |        Example       |                                    Description                                    | Complexity |
