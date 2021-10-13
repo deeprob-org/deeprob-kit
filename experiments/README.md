@@ -14,13 +14,13 @@ The experiments scripts are available in the `experiments` directory and can be 
 by specifying the dataset and hyper-parameters.
 The following table shows the available experiments scripts.
 
-|      Experiment      |                                    Description                                     |
-|----------------------|------------------------------------------------------------------------------------|
-| energy.py            | Fit Sum-Product Networks (SPNs) and Normalizing Flows on [energy functions](#r1).  |
-| spn.py               | Experiments for Sum-Product Networks (SPNs).                                       |
-| ratspn.py            | Experiments for Randomized And Tensorized Sum-Product Networks (RAT-SPNs).         |
-| dgcspn.py            | Experiments for Deep Generalized Convolutional Sum-Product Networks (DGC-SPNs).    |
-| flows.py             | Experiments for several Normalizing Flows models.                                  |
+|      Experiment      |                                            Description                                         |
+|----------------------|------------------------------------------------------------------------------------------------|
+| energy.py            | Fit Sum-Product Networks (SPNs) and Normalizing Flows on energy functions. <sup>[1](#r1)</sup> |
+| spn.py               | Experiments for Sum-Product Networks (SPNs).                                                   |
+| ratspn.py            | Experiments for Randomized And Tensorized Sum-Product Networks (RAT-SPNs).                     |
+| dgcspn.py            | Experiments for Deep Generalized Convolutional Sum-Product Networks (DGC-SPNs).                |
+| flows.py             | Experiments for several Normalizing Flows models.                                              |
 
 <b id="r1">1.</b> Rezende and Mohamed. [*Variational Inference with Normalizing Flows*][RezendeMohamed2015]. ICML (2015).
 
