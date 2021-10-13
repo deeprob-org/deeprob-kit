@@ -4,9 +4,9 @@ sys.path.insert(0, os.path.abspath('../'))
 
 # -- Project information -----------------------------------------------------
 project = 'DeeProb-kit'
-author = 'Lorenzo Loconte'
+author = 'Lorenzo Loconte, Gennaro Gala'
 copyright = '2021, {}'.format(author)
-release = version = '0.6.4'
+release = version = '1.0.0'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -18,7 +18,7 @@ extensions = [
     'sphinx_rtd_theme'
 ]
 source_suffix = ['.rst', '.md']
-exclude_patterns = ['api/modules.rst']
+exclude_patterns = ['api/modules.rst', 'README.md']
 
 # -- Options for HTML output -------------------------------------------------
 html_static_path = ['_static']

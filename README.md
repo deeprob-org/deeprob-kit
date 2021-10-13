@@ -4,6 +4,7 @@
 ![Logo](docs/deeprob-logo.svg)
 
 ## Abstract
+
 **DeeProb-kit** is a general-purpose Python library that implements several deep probabilistic models,
 putting an effort into unifying and standardizing the experiments across most of them.
 The implementation in a single library of different models permits to easily combine them,
@@ -13,6 +14,7 @@ The library consists of a collection of deep probabilistic models such as variou
 Some models are implemented using *PyTorch* for fast training and inference on GPUs.
 
 ## Features
+
 - Inference algorithms for SPNs. <sup>[1](#r1) [4](#r4)</sup>
 - Learning algorithms for SPNs structure. <sup>[1](#r1) [2](#r2) [3](#r3) [4](#r4) [5](#r5)</sup>
 - Chow-Liu Trees (CLT) as SPN leaves. <sup>[12](#r12) [13](#r13)</sup>
@@ -42,7 +44,8 @@ other than density estimation task.
 | NICE       | Non-linear Independent Components Estimation Flow  | (1, H, W); (3, H, W) |      ❌     |
 | RealNVP    | Real-valued Non-Volume-Preserving Flow             | (1, H, W); (3, H, W) |      ❌     |
 
-## Installation and Documentation
+## Installation
+
 The library can be installed either from PIP repository or by source code.
 ```shell
 # Install from PIP repository
@@ -52,53 +55,17 @@ pip install deeprob-kit
 # Install from `main` git branch
 pip install -e git+https://github.com/deeprob-org/deeprob-kit.git@main#egg=deeprob-kit
 ```
-The documentation is generated automatically by Sphinx (with Read-the-Docs theme), and it's hosted using GitHub Pages
-at [deeprob-kit]().
 
-## Datasets and Experiments
-A collection of 29 binary datasets, which most of them are used in *Probabilistic Circuits* literature,
-can be found at [UCLA-StarAI-Binary-Datasets](https://github.com/UCLA-StarAI/Density-Estimation-Datasets).
-Moreover, a collection of 5 continuous datasets, commonly present in works regarding *Normalizing Flows*,
-can be found at [MAF-Continuous-Datasets](https://zenodo.org/record/1161203#.Wmtf_XVl8eN).
+## Project Directories
 
-In order to run the experiments, it is necessary to clone the repository.
-After downloading them, the datasets must be stored in the `experiments/datasets` directory to be able to
-run the experiments (and also Unit Tests).
-The experiments scripts are available in the `experiments` directory and can be launched using the command line
-by specifying the dataset and hyper-parameters.
+The documentation is generated automatically by Sphinx using sources stored in the [docs](docs) directory.
 
-## Code Examples
-A collection of code examples can be found in the `examples` directory.
-In order to run the code examples, it is necessary clone the repository.
-However, additional datasets are not required.
-Note that the given examples are not intended to produce state-of-the-art results,
-but only to present the library.
-
-The following table contains a description about them and a code complexity ranging from one to three stars.
-The *Complexity* column consists of a measure that roughly represents how many features of the library are used, as well as
-the expected time required to run the script.
-
-|        Example       |                                    Description                                    | Complexity |
-|----------------------|-----------------------------------------------------------------------------------|:----------:|
-| naive_model.py       | Learn, evaluate and print statistics about a naive factorized model.              |      ⭐     |      
-| spn_plot.py          | Instantiate, prune, marginalize and plot some SPNs.                               |      ⭐     |
-| clt_plot.py          | Learn a Binary CLT and plot it.                                                   |      ⭐     |
-| spn_moments.py       | Instantiate and compute moments statistics about the random variables.            |      ⭐     |
-| sklearn_interface.py | Learn and evaluate a SPN using the scikit-learn interface.                        |      ⭐     |
-| spn_custom_leaf.py   | Learn, evaluate and serialize a SPN with a user-defined leaf distribution.        |      ⭐     |
-| clt_to_spn.py        | Learn a Binary CLT, convert it to a structured decomposable SPN and plot it.      |      ⭐     |
-| spn_clt_em.py        | Instantiate a SPN with Binary CLTs, apply EM algorithm and sample some data.      |     ⭐⭐     |
-| clt_queries.py       | Learn a Binary CLT, plot it, run some queries and sample some data.               |     ⭐⭐     |
-| ratspn_mnist.py      | Train and evaluate a RAT-SPN on MNIST.                                            |     ⭐⭐     |
-| dgcspn_olivetti.py   | Train, evaluate and complete some images with DGC-SPN on Olivetti-Faces.          |     ⭐⭐     |
-| dgcspn_mnist.py      | Train and evaluate a DGC-SPN on MNIST.                                            |     ⭐⭐     |
-| nvp1d_moons.py       | Train and evaluate a 1D RealNVP on Moons dataset.                                 |     ⭐⭐     |
-| maf_cifar10.py       | Train and evaluate a MAF on CIFAR10.                                              |     ⭐⭐⭐    |
-| nvp2d_mnist.py       | Train and evaluate a 2D RealNVP on MNIST.                                         |     ⭐⭐⭐    |
-| nvp2d_cifar10.py     | Train and evaluate a 2D RealNVP on CIFAR10.                                       |     ⭐⭐⭐    |
-| spn_latent_mnist.py  | Train and evaluate a SPN on MNIST using the features extracted by an autoencoder. |     ⭐⭐⭐    |
+A collection of code examples and experiments can be found in the [examples](examples) and [experiments](experiments)
+directories respectively.
+Moreover, benchmark code can be found in the [benchmark](benchmark) directory.
 
 ## Related Repositories
+
 - [SPFlow](https://github.com/SPFlow/SPFlow)
 - [RAT-SPN](https://github.com/cambridge-mlg/RAT-SPN)
 - [Random-PC](https://github.com/gengala/Random-Probabilistic-Circuits)
