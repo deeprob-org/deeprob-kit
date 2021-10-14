@@ -18,6 +18,8 @@ jobs:
     steps:
       # Checks-out your repository, so your job can access it
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       # Setup a Python environment
       - uses: actions/setup-python@v2
@@ -25,12 +27,21 @@ jobs:
           python-version: '3.8'
           architecture: 'x64'
 
-      # Install dependencies
+      # Cache PIP dependencies
+      - name: Cache PIP Dependencies
+        id: pip-dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'docs/requirements.txt') }}
+
+      # Install Dependencies
       - name: Install Dependencies
-        working-directory: docs
+        if: steps.pip-dependencies.outputs.cache-hit != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -r docs/requirements.txt
           pip install git+https://github.com/samtygier-stfc/sphinx-multiversion.git@prebuild_command
 
       # Build versioned documentation
