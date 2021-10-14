@@ -7,6 +7,7 @@ project = 'DeeProb-kit'
 author = 'Lorenzo Loconte, Gennaro Gala'
 copyright = '2021, {}'.format(author)
 release = version = '1.0.0'
+sourcelib = 'deeprob'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -14,6 +15,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.githubpages',
     'sphinx.ext.viewcode',
+    'sphinx_multiversion',
     'myst_parser',
     'sphinx_rtd_theme'
 ]
@@ -21,10 +23,12 @@ source_suffix = ['.rst', '.md']
 exclude_patterns = ['api/modules.rst', 'README.md']
 
 # -- Options for HTML output -------------------------------------------------
+templates_path = ['_templates']
+html_sidebars = {'**': ['versions.html']}
 html_static_path = ['_static']
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
-    'display_version': True,
+    'display_version': False,
     'navigation_depth': 6,
     'collapse_navigation': True,
 }
@@ -42,4 +46,11 @@ autodoc_default_options = {
 }
 
 # -- MyST settings -----------------------------------------------------------
-suppress_warnings = ["myst.header"]
+suppress_warnings = ['myst.header']
+
+# -- Multiversion settings ---------------------------------------------------
+smv_tag_whitelist = r'^.*$'
+smv_branch_whitelist = r'^.*$'
+
+# Build API documentation using Sphinx APIdoc, for every version
+smv_prebuild_command = "sphinx-apidoc -o api '../{}'".format(sourcelib)

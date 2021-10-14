@@ -1,0 +1,48 @@
+# This is a workflow for pushing versioned documentation to the gh-pages branch
+name: Sphinx-MultiDoc
+
+on:
+  # Permits manual workflow dispatch
+  workflow_dispatch:
+
+  # Triggers the workflow on push events on the main branch and tags
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Setup a Python environment
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+
+      # Install dependencies
+      - name: Install Dependencies
+        working-directory: docs
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install git+https://github.com/samtygier-stfc/sphinx-multiversion.git@prebuild_command
+
+      # Build versioned documentation
+      - name: Build Versioned Documentation
+        working-directory: docs
+        run: make
+
+      # Deploy versioned documentation, using GitHub Pages
+      - name: Deploy Documentation
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          force_orphan: true
+          enable_jekyll: false
+          publish_dir: docs/_build
+          github_token: ${{ secrets.GITHUB_TOKEN }}
