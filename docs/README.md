@@ -22,5 +22,5 @@ make clean
 # Build HTML documentation
 make
 ```
-The output HTML documentation, for any local branch and tag (or release), can be found inside the `_build/html`
+The output HTML documentation, for any local branch and tag (or release), can be found inside the `_build`
 directory.
