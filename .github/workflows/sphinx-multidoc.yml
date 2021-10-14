@@ -22,26 +22,35 @@ jobs:
           fetch-depth: 0
 
       # Setup a Python environment
-      - uses: actions/setup-python@v2
+      - name: Setup Python Environment
+        uses: actions/setup-python@v2
         with:
           python-version: '3.8'
           architecture: 'x64'
 
+      # Update PIP
+      - name: Update PIP
+        run: |
+          python -m pip install --upgrade pip
+
       # Cache PIP dependencies
-      - name: Cache PIP Dependencies
+      - name: Cache PIP dependencies
         id: pip-dependencies
         uses: actions/cache@v2
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'docs/requirements.txt') }}
 
-      # Install Dependencies
-      - name: Install Dependencies
+      # Install PIP dependencies (if not cached)
+      - name: Install PIP dependencies
         if: steps.pip-dependencies.outputs.cache-hit != 'true'
         run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r docs/requirements.txt
+
+      # Install additional dependencies (that cannot be cached)
+      - name: Install additional dependencies
+        run: |
           pip install git+https://github.com/samtygier-stfc/sphinx-multiversion.git@prebuild_command
 
       # Build versioned documentation
