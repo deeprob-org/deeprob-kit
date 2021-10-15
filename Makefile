@@ -1,18 +1,30 @@
 PYTHON       = python
+PYLINT       = pylint
 UNITTEST     = unittest
 COVERAGE     = coverage
 SETUP_SOURCE = setup.py
 
-COVERAGE_FLAGS = --source deeprob
-UNITTEST_FLAGS = --verbose --start-directory test
+SOURCE_DIR = deeprob
+TEST_DIR   = test
 
-.PHONY: clean
+PYLINT_FLAGS   = $(SOURCE_DIR) --exit-zero
+COVERAGE_FLAGS = --source $(SOURCE_DIR)
+UNITTEST_FLAGS = --start-directory $(TEST_DIR)
 
-# Print Coverage information on stdout
+.PHONY: all clean
+
+# Print static code quality and coverage information to stdout
+all: pylint_cli coverage_cli
+
+# Print static code quality to stdout
+pylint_cli:
+	$(PYLINT) $(PYLINT_FLAGS)
+
+# Print coverage information to stdout
 coverage_cli: unit_tests
 	$(COVERAGE) report
 
-# Run Unit Tests
+# Run unit tests
 unit_tests:
 	$(COVERAGE) run $(COVERAGE_FLAGS) -m $(UNITTEST) discover $(UNITTEST_FLAGS)
 

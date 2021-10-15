@@ -14,5 +14,4 @@ min-similarity-lines=10
 generated-members = numpy.*,torch.*
 
 [message control]
-disable = C0114,R0902,R0912,R0913,R0914,R0915,R1734,R1735
-
+disable = C0114,C0115,C0116,R0902,R0912,R0913,R0914,R0915,R1734,R1735
