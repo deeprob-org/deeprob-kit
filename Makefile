@@ -3,6 +3,8 @@ UNITTEST     = unittest
 COVERAGE     = coverage
 SETUP_SOURCE = setup.py
 
+BENCHMARK_DIR = benchmark
+
 COVERAGE_FLAGS = --source deeprob
 UNITTEST_FLAGS = --verbose --start-directory test
 
@@ -15,6 +17,12 @@ coverage_cli: unit_tests
 # Run Unit Tests
 unit_tests:
 	$(COVERAGE) run $(COVERAGE_FLAGS) -m $(UNITTEST) discover $(UNITTEST_FLAGS)
+
+# Run benchmarks
+benchmarks:
+	export PYTHONPATH=. && \
+	$(PYTHON) $(BENCHMARK_DIR)/clt_queries.py && \
+	$(PYTHON) $(BENCHMARK_DIR)/spn_queries.py
 
 # Upload the PIP package
 pip_upload: pip_package
