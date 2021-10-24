@@ -25,12 +25,12 @@ if __name__ == '__main__':
 
     # Compute the average log-likelihood and two standard deviations
     score = clf.score(data)
-    print('Train - Mean LL: {} - Stddev LL: {}'.format(score['mean_ll'], score['stddev_ll']))
+    print('Train data -- Mean LL: {:.4f} - Stddev LL: {:.4f}'.format(score['mean_ll'], score['stddev_ll']))
 
     # Sample some data and compute the average log-likelihood and two standard deviations
     samples = clf.sample(n=100)
     score = clf.score(samples)
-    print('Sampling - Mean LL: {} - Stddev LL: {}'.format(score['mean_ll'], score['stddev_ll']))
+    print('Sampled data - Mean LL: {:.4f} - Stddev LL: {:.4f}'.format(score['mean_ll'], score['stddev_ll']))
 
     # =================================================================================================================
 
@@ -46,9 +46,9 @@ if __name__ == '__main__':
     clf.fit(data, target)
 
     # Compute the accuracy score
-    print('Train - Accuracy: {}'.format(clf.score(data, target)))
+    print('Train data -- Accuracy: {:.2f}'.format(clf.score(data, target)))
 
     # Sample some data from the conditional distribution and compute the accuracy score
     classes = np.array([1, 0, 0, 1, 0, 1, 1, 0, 1, 1])
     samples = clf.sample(y=classes)
-    print('Sampling - Accuracy: {}'.format(clf.score(samples[:, :-1], classes)))
+    print('Sampled data -- Accuracy: {:.2f}'.format(clf.score(samples[:, :-1], classes)))

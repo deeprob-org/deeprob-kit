@@ -23,14 +23,16 @@ if __name__ == '__main__':
     clt = spn.BinaryCLT(scope)
     clt.fit(data, domains, alpha=0.01, random_state=random_state)
 
+    # Plot the CLT
+    clt_filename = 'clt-bdigits.svg'
+    print("Plotting the learnt CLT to {} ...".format(clt_filename))
+    spn.plot_binary_clt(clt, clt_filename, show_weights=False)
+
     # Evaluate the model by computing the average log-likelihood with two standard deviations
     lls = clt.log_likelihood(data)
     mean_ll = np.mean(lls)
     stddev_ll = 2.0 * np.std(lls) / np.sqrt(len(lls))
-    print('EVI -- Mean LL: {} - Stddev LL: {}'.format(mean_ll, stddev_ll))
-
-    # Plot the CLT
-    spn.plot_binary_clt(clt, 'clt-bdigits.svg', show_weights=False)
+    print('EVI -- Mean LL: {:.4f} - Stddev LL: {:.4f}'.format(mean_ll, stddev_ll))
 
     # Randomly set NaNs to marginalize random variables
     mar_data = data.copy()
@@ -41,7 +43,7 @@ if __name__ == '__main__':
     lls = clt.log_likelihood(mar_data)
     mean_ll = np.mean(lls)
     stddev_ll = 2.0 * np.std(lls) / np.sqrt(len(lls))
-    print('MAR -- Mean LL: {} - Stddev LL: {}'.format(mean_ll, stddev_ll))
+    print('MAR -- Mean LL: {:.4f} - Stddev LL: {:.4f}'.format(mean_ll, stddev_ll))
 
     # Compute maximum probable explanation (MPE) queries
     mpe_data = clt.mpe(mar_data)
@@ -51,13 +53,13 @@ if __name__ == '__main__':
     lls = clt.log_likelihood(mpe_data)
     mean_ll = np.mean(lls)
     stddev_ll = 2.0 * np.std(lls) / np.sqrt(len(lls))
-    print('MPE -- Mean LL: {} - Stddev LL: {}'.format(mean_ll, stddev_ll))
+    print('MPE -- Mean LL: {:.4f} - Stddev LL: {:.4f}'.format(mean_ll, stddev_ll))
 
     # Sample some data points, using ancestral sampling (by assign all NaNs)
     # However, conditional sampling is also supported (by RVs assignments)
     samples = np.full([25, n_features], np.nan)
     samples = clt.sample(samples)
-    assert ~np.any(np.isnan(samples)), "All RVs should be assigned"
+    assert ~np.any(np.isnan(samples)), "All RVs are expected to be assigned"
 
     # Plot the samples in a grid
     fig, axs = plt.subplots(5, 5, figsize=(5, 5))
@@ -67,4 +69,6 @@ if __name__ == '__main__':
             axs[i, j].imshow(x, cmap='gray', vmin=0, vmax=1)
             axs[i, j].axis('off')
     fig.tight_layout()
-    fig.savefig('clt-bdigits-samples.png')
+    samples_filename = 'clt-bdigits-samples.png'
+    print("Plotting generated samples to {} ...".format(samples_filename))
+    fig.savefig(samples_filename)

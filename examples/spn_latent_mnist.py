@@ -7,6 +7,7 @@ import torch.utils.data as data
 import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from tqdm import tqdm
 
 import deeprob.utils as utils
 import deeprob.spn.structure as spn
@@ -47,7 +48,8 @@ if __name__ == '__main__':
     train_loader = data.DataLoader(data_train, batch_size=batch_size, shuffle=True)
     optimizer = optim.Adam(autoencoder.parameters(), lr=lr)
     criterion = nn.BCELoss()
-    for epoch in range(epochs):
+    tk_epochs = tqdm(range(epochs), bar_format='{l_bar}{bar:24}{r_bar}', unit='epoch')
+    for epoch in tk_epochs:
         train_loss = 0.0
         for (inputs, _) in train_loader:
             optimizer.zero_grad()
@@ -58,7 +60,7 @@ if __name__ == '__main__':
             optimizer.step()
             train_loss += loss.item() * inputs.shape[0]
         train_loss /= len(train_loader)
-        print('Epoch: {} - Train loss: {}'.format(epoch + 1, round(train_loss, ndigits=4)))
+        tk_epochs.set_description('Train Loss: {}'.format(round(train_loss, 4)))
 
     # Compute the (train data) latent space features using the encoder
     train_loader = data.DataLoader(data_train, batch_size=batch_size, shuffle=True)
@@ -103,11 +105,14 @@ if __name__ == '__main__':
         split_cols_kwargs={'d': 0.3}  # Use d=0.3 as threshold for RDC independence test
     )
 
-    # Print some statistics regarding the structure and the parameters
+    # Print some statistics about the model's structure and parameters
+    print("SPN structure and parameters statistics:")
     print(spnutils.compute_statistics(root))
 
     # Save the model to a JSON file
-    spn.save_spn_json(root, 'spn-latent-mnist.json')
+    spn_filename = 'spn-latent-mnist.json'
+    print("Saving the SPN structure and parameters to {} ...".format(spn_filename))
+    spn.save_spn_json(root, spn_filename)
 
     # Make some predictions on the test set classes
     # This is done by running a Maximum Probable Explanation (MPE) query
@@ -117,6 +122,7 @@ if __name__ == '__main__':
     y_pred = data_test[:, -1]
 
     # Plot a classification report
+    print("Classification Report:")
     print(sk.metrics.classification_report(y_test, y_pred))
 
     # Sample some examples for each class
@@ -134,4 +140,6 @@ if __name__ == '__main__':
         images = transform.backward(features)
         inputs = torch.tensor(images, dtype=torch.float32, device=device)
         data_images = decoder(inputs).cpu()
-        torchvision.utils.save_image(data_images, 'spn-latent-mnist-samples.png', nrow=n_samples, padding=0)
+        samples_filename = 'spn-latent-mnist-samples.png'
+        print("Plotting generated samples to {} ...".format(samples_filename))
+        torchvision.utils.save_image(data_images, samples_filename, nrow=n_samples, padding=0)

@@ -20,4 +20,6 @@ if __name__ == '__main__':
     clt.fit(data, domain, alpha=0.1, random_state=random_state)
 
     # Plot the CLT
-    spn.plot_binary_clt(clt, 'clt-bboston.svg')
+    clt_filename = 'clt-bboston.svg'
+    print("Plotting the learnt CLT to {} ...".format(clt_filename))
+    spn.plot_binary_clt(clt, clt_filename)

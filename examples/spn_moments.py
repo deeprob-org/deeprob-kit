@@ -1,3 +1,5 @@
+import numpy as np
+
 import deeprob.spn.structure as spn
 import deeprob.spn.algorithms as spnalg
 
@@ -19,8 +21,12 @@ if __name__ == '__main__':
     # Initialize the IDs of the SPN nodes
     spn.assign_ids(root)
 
-    # Compute and print four moments
-    print("Expectation: {}".format(spnalg.expectation(root)))
-    print("Variance: {}".format(spnalg.variance(root)))
-    print("Skewness: {}".format(spnalg.skewness(root)))
-    print("Kurtosis: {}".format(spnalg.kurtosis(root)))
+    # Compute and print four moments w.r.t. to each random variable
+    expectation = spnalg.expectation(root)
+    variance = spnalg.variance(root)
+    skewness = spnalg.skewness(root)
+    kurtosis = spnalg.kurtosis(root)
+    print("Expectation: {}".format(np.round(expectation, 2)))
+    print("Variance: {}".format(np.round(variance, 2)))
+    print("Skewness: {}".format(np.round(skewness, 2)))
+    print("Kurtosis: {}".format(np.round(kurtosis, 2)))

@@ -27,7 +27,8 @@ if __name__ == '__main__':
 
     # Compute the average likelihood
     ls = spnalg.likelihood(naive, data)
-    print("Average Likelihood: {}".format(np.mean(ls)))
+    print("Average Likelihood: {:.4f}".format(np.mean(ls)))
 
     # Print some statistics about the model's structure and parameters
+    print("SPN structure and parameters statistics:")
     print(spnutils.compute_statistics(naive))

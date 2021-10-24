@@ -2,7 +2,7 @@ import deeprob.spn.structure as spn
 import deeprob.spn.algorithms as spnalg
 
 if __name__ == '__main__':
-    # Instantiate a simple SPN
+    # Instantiate a dummy SPN
     b1 = spn.Bernoulli(1, p=0.1)
     b2 = spn.Bernoulli(0, p=0.5)
     p0 = spn.Product(children=[spn.Bernoulli(0, p=0.9), b1])
@@ -20,12 +20,18 @@ if __name__ == '__main__':
     spn.assign_ids(root)
 
     # Plot the SPN
-    spn.plot_spn(root, 'spn-dummy.svg')
+    spn_filename = 'spn-dummy.svg'
+    print("Plotting the dummy SPN to {} ...".format(spn_filename))
+    spn.plot_spn(root, spn_filename)
 
-    # Prune the SPN structure
+    # Prune and plot the SPN structure
     pruned_spn = spnalg.prune(root)
-    spn.plot_spn(pruned_spn, 'spn-pruned.svg')
+    pruned_spn_filename = 'spn-pruned.svg'
+    print("Plotting the pruned SPN to {} ...".format(pruned_spn_filename))
+    spn.plot_spn(pruned_spn, pruned_spn_filename)
 
-    # Marginalize the SPN structure w.r.t. the random variable 0
+    # Marginalize and plot the SPN structure w.r.t. the random variable 0
     marginalized_spn = spnalg.marginalize(root, [0])
-    spn.plot_spn(marginalized_spn, 'spn-marginalized.svg')
+    marginalized_spn_filename = 'spn-marginalized.svg'
+    print("Plotting the marginalized SPN w.r.t. RV #0 to {} ...".format(marginalized_spn_filename))
+    spn.plot_spn(marginalized_spn, marginalized_spn_filename)

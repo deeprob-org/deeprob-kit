@@ -68,7 +68,7 @@ if __name__ == '__main__':
     lls = spnalg.log_likelihood(root, data_train)
     mean_ll = np.mean(lls)
     stddev_ll = 2.0 * np.std(lls) / np.sqrt(len(lls))
-    print('Basic -- Mean LL: {} - Stddev LL: {}'.format(mean_ll, stddev_ll))
+    print('Base -- Mean LL: {:.4f} - Stddev LL: {:.4f}'.format(mean_ll, stddev_ll))
 
     # Run batch Expectation Maximization (EM), but keeping the starting parameters
     expectation_maximization(
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     lls = spnalg.log_likelihood(root, data_train)
     mean_ll = np.mean(lls)
     stddev_ll = 2.0 * np.std(lls) / np.sqrt(len(lls))
-    print('EM -- Mean LL: {} - Stddev LL: {}'.format(mean_ll, stddev_ll))
+    print('After EM -- Mean LL: {:.4f} - Stddev LL: {:.4f}'.format(mean_ll, stddev_ll))
 
     # Sample some data points, using conditional sampling (by assign all NaNs except the targets)
     nan_features = np.full([5 * n_targets, n_features], np.nan)
@@ -97,7 +97,11 @@ if __name__ == '__main__':
             axs[i, j].imshow(x, cmap='gray', vmin=0, vmax=1)
             axs[i, j].axis('off')
     fig.tight_layout()
-    fig.savefig('spn-clt-bdigits-samples.png')
+    samples_filename = 'spn-clt-bdigits-samples.png'
+    print("Plotting generated samples to {} ...".format(samples_filename))
+    fig.savefig(samples_filename)
 
     # Save the SPN model (structure and parameters)
-    spn.save_spn_json(root, 'spn-clt-bdigits.json')
+    spn_filename = 'spn-clt-bdigits.json'
+    print("Saving the SPN structure and parameters to {} ...".format(spn_filename))
+    spn.save_spn_json(root, spn_filename)
