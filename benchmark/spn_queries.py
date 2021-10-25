@@ -62,18 +62,24 @@ def spflow_build_spn(clt: spn.BinaryCLT) -> Node:  # This function is copy-paste
 
 
 if __name__ == '__main__':
-    n_repetitions = 20
+    gc.disable()
+    n_repetitions = 50
     data_train, evi_data, mar_data = load_dataset('ad', n_samples=5000, seed=42)
     clt = learn_binary_clt(data_train)
 
     root = deeprob_build_spn(clt)
+    print()
+    print("CLT -> SPN compilation statistics:")
     print(spnutils.compute_statistics(root))
 
+    print()
+    print("Benchmark of SPNs on DeeProb-kit ...")
+
     # ---- DeeProb-kit EVI Inference ----------------------------------------------------------------------------------
-    gc.collect()
     elapsed_times = list()
     with ContextState(check_spn=False):
         for _ in range(n_repetitions):
+            gc.collect()
             start_time = time.perf_counter()
             lls = spnalg.log_likelihood(root, evi_data)
             end_time = time.perf_counter()
@@ -84,10 +90,10 @@ if __name__ == '__main__':
     ))
 
     # ---- DeeProb-kit MAR Inference ----------------------------------------------------------------------------------
-    gc.collect()
     elapsed_times = list()
     with ContextState(check_spn=False):
         for _ in range(n_repetitions):
+            gc.collect()
             start_time = time.perf_counter()
             lls = spnalg.log_likelihood(root, mar_data)
             end_time = time.perf_counter()
@@ -98,10 +104,10 @@ if __name__ == '__main__':
     ))
 
     # ---- DeeProb-kit MPE Inference ----------------------------------------------------------------------------------
-    gc.collect()
     elapsed_times = list()
     with ContextState(check_spn=False):
         for _ in range(n_repetitions):
+            gc.collect()
             start_time = time.perf_counter()
             mpe_data = spnalg.mpe(root, mar_data, inplace=False)
             end_time = time.perf_counter()
@@ -113,27 +119,28 @@ if __name__ == '__main__':
     ))
 
     # ---- DeeProb-kit Sampling ---------------------------------------------------------------------------------------
-    gc.collect()
     elapsed_times = list()
     with ContextState(check_spn=False):
         for _ in range(n_repetitions):
+            gc.collect()
             start_time = time.perf_counter()
             _ = spnalg.sample(root, mar_data, inplace=False)
             end_time = time.perf_counter()
             elapsed_times.append(1e3 * (end_time - start_time))
     mean_time, stddev_time = compute_mean_stddev_times(elapsed_times)
-    print("[SMP] DeeProb-kit Avg. Time: {:.2f}ms (+- {:.2f})".format(
+    print("[Sampling] DeeProb-kit Avg. Time: {:.2f}ms (+- {:.2f})".format(
         mean_time, stddev_time
     ))
 
     print()
+    print("Benchmark of SPNs on SPFlow ...")
 
     root = spflow_build_spn(clt)
 
     # ---- SPFlow EVI Inference ---------------------------------------------------------------------------------------
-    gc.collect()
     elapsed_times = list()
     for _ in range(n_repetitions):
+        gc.collect()
         start_time = time.perf_counter()
         lls = log_likelihood(root, evi_data, dtype=np.float32)
         end_time = time.perf_counter()
@@ -144,9 +151,9 @@ if __name__ == '__main__':
     ))
 
     # ---- SPFlow MAR Inference ---------------------------------------------------------------------------------------
-    gc.collect()
     elapsed_times = list()
     for _ in range(n_repetitions):
+        gc.collect()
         start_time = time.perf_counter()
         lls = log_likelihood(root, mar_data, dtype=np.float32)
         end_time = time.perf_counter()
@@ -157,9 +164,9 @@ if __name__ == '__main__':
     ))
 
     # ---- SPFlow MPE Inference ---------------------------------------------------------------------------------------
-    gc.collect()
     elapsed_times = list()
     for _ in range(n_repetitions):
+        gc.collect()
         start_time = time.perf_counter()
         mpe_data = mpe(root, mar_data, in_place=False)
         end_time = time.perf_counter()
@@ -171,17 +178,15 @@ if __name__ == '__main__':
     ))
 
     # ---- SPFlow Sampling --------------------------------------------------------------------------------------------
-    gc.collect()
     rand_gen = np.random.RandomState(42)
     elapsed_times = list()
     for _ in range(n_repetitions):
+        gc.collect()
         start_time = time.perf_counter()
         _ = sample_instances(root, mar_data, rand_gen=rand_gen, in_place=False)
         end_time = time.perf_counter()
         elapsed_times.append(1e3 * (end_time - start_time))
     mean_time, stddev_time = compute_mean_stddev_times(elapsed_times)
-    print("[SMP] SPFlow Avg. Time: {:.2f}ms (+- {:.2f})".format(
+    print("[Sampling] SPFlow Avg. Time: {:.2f}ms (+- {:.2f})".format(
         mean_time, stddev_time
     ))
-
-    print()
