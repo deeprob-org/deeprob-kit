@@ -1,8 +1,8 @@
-import numpy as np
-
 from typing import List
 from copy import deepcopy
 from collections import defaultdict
+
+import numpy as np
 
 from deeprob.context import ContextState
 from deeprob.spn.structure.cltree import BinaryCLT

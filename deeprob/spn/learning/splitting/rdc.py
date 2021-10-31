@@ -1,12 +1,12 @@
 import warnings
-import numpy as np
-import scipy.sparse as sparse
-
 from typing import Union, Type, List, Callable
-
 from itertools import combinations
+
+import numpy as np
+from scipy import sparse
 from sklearn import cluster, cross_decomposition
 from sklearn.exceptions import ConvergenceWarning
+
 from deeprob.spn.structure.leaf import LeafType, Leaf
 from deeprob.utils.data import ohe_data, ecdf_data
 
@@ -102,7 +102,7 @@ def rdc_scores(
     :return: The RDC score matrix.
     """
     # Apply RDC transformation to the features
-    n_samples, n_features = data.shape
+    _, n_features = data.shape
     rdc_features = rdc_transform(data, distributions, domains, random_state, k, s, nl)
     pairwise_comparisons = list(combinations(range(n_features), 2))
 

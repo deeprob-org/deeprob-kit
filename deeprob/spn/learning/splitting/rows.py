@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Union, Type, Tuple, List, Callable, Any
+
+import numpy as np
 
 from deeprob.spn.structure.leaf import Leaf
 from deeprob.spn.learning.splitting.cluster import gmm, kmeans, kmeans_mb, dbscan, wald
@@ -51,17 +51,16 @@ def get_split_rows_method(split_rows: str) -> SplitRowsFunc:
     """
     if split_rows == 'kmeans':
         return kmeans
-    elif split_rows == 'kmeans_mb':
+    if split_rows == 'kmeans_mb':
         return kmeans_mb
-    elif split_rows == 'dbscan':
+    if split_rows == 'dbscan':
         return dbscan
-    elif split_rows == 'wald':
+    if split_rows == 'wald':
         return wald
-    elif split_rows == 'gmm':
+    if split_rows == 'gmm':
         return gmm
-    elif split_rows == 'rdc':
+    if split_rows == 'rdc':
         return rdc_rows
-    elif split_rows == 'random':
+    if split_rows == 'random':
         return random_rows
-    else:
-        raise ValueError("Unknown split rows method called {}".format(split_rows))
+    raise ValueError("Unknown split rows method called {}".format(split_rows))

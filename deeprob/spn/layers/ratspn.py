@@ -1,10 +1,10 @@
 import abc
+from typing import Optional, Tuple, List
+
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.distributions as distributions
-
-from typing import Optional, Tuple, List
+from torch import nn
+from torch import distributions
 
 from deeprob.torch.initializers import dirichlet_
 
@@ -16,7 +16,8 @@ class RegionGraphLayer(abc.ABC, nn.Module):
         out_channels: int,
         regions: List[tuple],
         rg_depth: int,
-        dropout: Optional[float] = None
+        dropout: Optional[float] = None,
+        **kwargs
     ):
         """
         Initialize a Region Graph-based base distribution.
@@ -27,7 +28,7 @@ class RegionGraphLayer(abc.ABC, nn.Module):
         :param rg_depth: The depth of the region graph.
         :param dropout: The leaf nodes dropout rate. It can be None.
         """
-        super(RegionGraphLayer, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.in_regions = len(regions)
         self.out_channels = out_channels
@@ -44,8 +45,8 @@ class RegionGraphLayer(abc.ABC, nn.Module):
         mask = regions.copy()
         if self.pad > 0:
             pad_mask = np.zeros(shape=(len(regions), 1, self.dimension), dtype=np.bool_)
-            for i in range(len(regions)):
-                n_dummy = self.dimension - len(regions[i])
+            for i, region in enumerate(regions):
+                n_dummy = self.dimension - len(region)
                 if n_dummy > 0:
                     pad_mask[i, :, -n_dummy:] = True
                     mask[i] = mask[i] + (mask[i][-1],) * n_dummy
@@ -111,7 +112,6 @@ class RegionGraphLayer(abc.ABC, nn.Module):
 
         :return: The mode of the distribution.
         """
-        pass
 
     @torch.no_grad()
     def mpe(self, x: torch.Tensor, idx_group: torch.Tensor, idx_offset: torch.Tensor) -> torch.Tensor:
@@ -177,7 +177,7 @@ class GaussianLayer(RegionGraphLayer):
         :param uniform_loc: The optional uniform distribution parameters for location initialization.
         :param optimize_scale: Whether to optimize scale and location jointly.
         """
-        super(GaussianLayer, self).__init__(in_features, out_channels, regions, rg_depth, dropout)
+        super().__init__(in_features, out_channels, regions, rg_depth, dropout)
 
         # Instantiate the location variable
         if uniform_loc is None:
@@ -229,7 +229,7 @@ class BernoulliLayer(RegionGraphLayer):
         :param rg_depth: The depth of the region graph.
         :param dropout: The leaf nodes dropout rate. It can be None.
         """
-        super(BernoulliLayer, self).__init__(in_features, out_channels, regions, rg_depth, dropout)
+        super().__init__(in_features, out_channels, regions, rg_depth, dropout)
 
         # Instantiate the logit distribution parameters
         self.logits = nn.Parameter(
@@ -257,7 +257,7 @@ class ProductLayer(nn.Module):
         :param in_regions: The number of input regions.
         :param in_nodes: The number of input nodes per region.
         """
-        super(ProductLayer, self).__init__()
+        super().__init__()
         self.in_regions = in_regions
         self.in_nodes = in_nodes
         self.out_partitions = in_regions // 2
@@ -344,7 +344,7 @@ class SumLayer(nn.Module):
         :param out_nodes: The number of output nodes per region.
         :param dropout: The input nodes dropout rate. It can be None.
         """
-        super(SumLayer, self).__init__()
+        super().__init__()
         self.in_partitions = in_partitions
         self.in_nodes = in_nodes
         self.out_regions = in_partitions
@@ -429,7 +429,7 @@ class RootLayer(nn.Module):
         :param in_nodes: The number of input nodes per partition.
         :param out_classes: The number of output nodes.
         """
-        super(RootLayer, self).__init__()
+        super().__init__()
         self.in_partitions = in_partitions
         self.in_nodes = in_nodes
         self.out_classes = out_classes

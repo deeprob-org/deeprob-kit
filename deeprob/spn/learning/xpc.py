@@ -1,15 +1,14 @@
-from deeprob.spn.utils.partitioning import Partition, generate_random_partitioning
-from deeprob.spn.learning.leaf import learn_mle
+from typing import Optional, Tuple
 
+import numpy as np
+
+from deeprob.utils.graph import maximum_spanning_tree
+from deeprob.utils.statistics import estimate_priors_joints, compute_mutual_information
+from deeprob.spn.utils.partitioning import Partition, generate_random_partitioning
 from deeprob.spn.structure.node import Node, Sum, Product, assign_ids
 from deeprob.spn.structure.cltree import BinaryCLT
 from deeprob.spn.structure.leaf import Bernoulli
-
-from deeprob.utils.statistics import estimate_priors_joints, compute_mutual_information
-from deeprob.utils.graph import maximum_spanning_tree
-
-from typing import Optional, Tuple
-import numpy as np
+from deeprob.spn.learning.leaf import learn_mle
 
 
 # SD stands for Structured Decomposable
@@ -114,7 +113,7 @@ def greedy_vars_ordering(
     :param data: The input data matrix.
     :param conj_len: The conjunction length.
     :param alpha: Laplace smoothing factor.
-    
+
     :return ordering: The ordering.
     """
     priors, joints = estimate_priors_joints(data, alpha)
@@ -163,8 +162,8 @@ def build_trees_dict(
     # and add it to a cumulative matrix (cumulative_info).
     n_vars = data.shape[1]
     cumulative_info = np.zeros((n_vars, n_vars))
-    for i in range(len(cl_parts_l)):
-        for part in cl_parts_l[i]:
+    for cl_parts in cl_parts_l:
+        for part in cl_parts:
             priors, joints = estimate_priors_joints(part.get_slice(data), alpha)
             mi = compute_mutual_information(priors, joints)
             cumulative_info[part.col_ids[:, None], part.col_ids] += mi
@@ -176,7 +175,10 @@ def build_trees_dict(
     scopes = conj_vars_l + [free_vars] if free_vars else conj_vars_l
     trees = []
     for scope in scopes:
-        _, tree = maximum_spanning_tree(adj_matrix=cumulative_info[scope][:, scope], root=scope.index(random_state.choice(scope)))
+        _, tree = maximum_spanning_tree(
+            adj_matrix=cumulative_info[scope][:, scope],
+            root=scope.index(random_state.choice(scope))
+        )
         trees.append(list(tree))
 
     # Concatenate trees and create the dictionary
@@ -304,7 +306,7 @@ def learn_xpc(
     trees_dict = None
     if sd and use_clt:
         trees_dict = build_trees_dict(data, [cl_parts_l], conj_vars_l, alpha, random_state)
-    
+
     # creating useful dictionary
     utils = {'part_root': part_root, 'cl_parts_l': cl_parts_l, 'conj_vars_l': conj_vars_l,
              'n_parts': n_parts, 'trees_dict': trees_dict}
@@ -352,7 +354,7 @@ def learn_expc(
     n_parts_l = [None] * ensemble_dim
     xpc_l = [None] * ensemble_dim
 
-    sd = (sd_level == SD_LEVEL_1 or sd_level == SD_LEVEL_2)
+    sd = (sd_level in [SD_LEVEL_1, SD_LEVEL_2])
     if sd_level == SD_LEVEL_2:
         ordering = greedy_vars_ordering(data, conj_len)
     else:
@@ -371,7 +373,7 @@ def learn_expc(
                 n_max_parts=n_max_parts,
                 uncond_vars=ordering,
                 random_state=random_state)
-    assert not all([n_parts == 1 for n_parts in n_parts_l]), 'No Partitioning Found'
+    assert not all(n_parts == 1 for n_parts in n_parts_l), 'No Partitioning Found'
 
     if sd_level == SD_LEVEL_0 or not use_clt:
         # no tree structure to respect
@@ -393,7 +395,7 @@ def learn_expc(
         for i in range(ensemble_dim):
             print('Building XPC %s/%s' % (i + 1, ensemble_dim))
             xpc_l[i] = build_xpc(data, part_root_l[i], trees_dict, det, use_clt, alpha)
-    
+
     # creating useful list of dictionaries
     utils = [{'part_root': part_root_l[i], 'cl_parts_l': cl_parts_l_l[i], 'conj_vars_l': conj_vars_l_l[i],
               'n_parts': n_parts_l[i], 'trees_dict': trees_dict_l[i]} for i in range(ensemble_dim)]

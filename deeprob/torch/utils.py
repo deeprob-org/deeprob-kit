@@ -1,10 +1,10 @@
+from typing import Union, Tuple
+
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
-
-from typing import Union, Tuple
+from torch import nn
+from torch import optim
 
 
 def get_activation_class(name: str):
@@ -24,8 +24,8 @@ def get_activation_class(name: str):
             'tanh': nn.Tanh,
             'sigmoid': nn.Sigmoid,
         }[name]
-    except KeyError:
-        raise ValueError("Unknown activation function called {}".format(name))
+    except KeyError as ex:
+        raise ValueError from ex
 
 
 def get_optimizer_class(name: str):
@@ -43,8 +43,8 @@ def get_optimizer_class(name: str):
             'adagrad': optim.Adagrad,
             'adam': optim.Adam
         }[name]
-    except KeyError:
-        raise ValueError("Unknown optimizer called {}".format(name))
+    except KeyError as ex:
+        raise ValueError from ex
 
 
 class ScaledTanh(nn.Module):
@@ -55,7 +55,7 @@ class ScaledTanh(nn.Module):
 
         :param weight_size: The size of the weight parameter.
         """
-        super(ScaledTanh, self).__init__()
+        super().__init__()
         self.weight = nn.Parameter(torch.zeros(weight_size), requires_grad=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -79,7 +79,7 @@ class MaskedLinear(nn.Linear):
         :param mask: The mask to apply to the weights of the layer.
         :raises ValueError: If the mask parameter is not consistent with the number of input and output features.
         """
-        super(MaskedLinear, self).__init__(in_features, out_features)
+        super().__init__(in_features, out_features)
         if mask.shape[0] != out_features or mask.shape[1] != in_features:
             raise ValueError("Inconsistent mask shape")
         self.register_buffer('mask', torch.tensor(mask, dtype=torch.float32))
@@ -115,7 +115,7 @@ class WeightNormConv2d(nn.Module):
         :param padding: The padding to apply.
         :param bias: Whether to use bias parameters.
         """
-        super(WeightNormConv2d, self).__init__()
+        super().__init__()
         self.conv = nn.utils.weight_norm(
             nn.Conv2d(
                 in_channels, out_channels, kernel_size,

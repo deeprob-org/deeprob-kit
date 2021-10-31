@@ -1,7 +1,8 @@
-import numpy as np
-
 from collections import defaultdict
+
+import numpy as np
 from scipy.special import logsumexp
+
 from deeprob.spn.structure.leaf import Leaf
 from deeprob.spn.structure.node import Node, Sum, Product, topological_order
 from deeprob.spn.utils.validity import check_spn

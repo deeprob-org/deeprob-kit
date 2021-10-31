@@ -1,10 +1,10 @@
 import os
-import numpy as np
-import torch
-import torch.nn as nn
-
 from typing import Union
 from collections import OrderedDict
+
+import numpy as np
+import torch
+from torch import nn
 
 
 class EarlyStopping:

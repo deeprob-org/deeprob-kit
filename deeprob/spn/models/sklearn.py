@@ -1,7 +1,6 @@
-import numpy as np
-
 from typing import Optional, Union, Type, List
 
+import numpy as np
 from scipy.special import log_softmax
 from sklearn.base import BaseEstimator, DensityMixin, ClassifierMixin
 
@@ -25,7 +24,7 @@ class SPNEstimator(BaseEstimator, DensityMixin):
         :param domains: A list of domains (one for each feature).
         :param kwargs: Additional arguments to pass to the SPN learner.
         """
-        super(SPNEstimator, self).__init__()
+        super().__init__()
         self.distributions = distributions
         self.domains = domains
         self.kwargs = kwargs
@@ -115,7 +114,7 @@ class SPNClassifier(BaseEstimator, ClassifierMixin):
         :param domains: A list of domains (one for each feature).
         :param kwargs: Additional arguments to pass to the SPN learner.
         """
-        super(SPNClassifier, self).__init__()
+        super().__init__()
         self.distributions = distributions
         self.domains = domains
         self.kwargs = kwargs
@@ -203,13 +202,13 @@ class SPNClassifier(BaseEstimator, ClassifierMixin):
         if n is not None and y is not None:
             raise ValueError("Only one between 'n' and 'y' can be specified")
 
+        # Conditional sampling
         if y is not None:
-            # Conditional sampling
             y = np.expand_dims(y, axis=1)
             x = np.hstack([np.tile(np.nan, [len(y), self.n_features_]), y])
             return sample(self.spn_, x, inplace=False)
-        else:
-            # Full sampling
-            n = 1 if n is None else n
-            x = np.tile(np.nan, [n, self.n_features_ + 1])
-            return sample(self.spn_, x, inplace=True)
+
+        # Full sampling
+        n = 1 if n is None else n
+        x = np.tile(np.nan, [n, self.n_features_ + 1])
+        return sample(self.spn_, x, inplace=True)

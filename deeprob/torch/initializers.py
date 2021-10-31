@@ -1,5 +1,5 @@
 import torch
-import torch.distributions as distributions
+from torch import distributions
 
 
 def dirichlet_(tensor: torch.Tensor, alpha: float = 1.0, log_space: bool = True, dim: int = -1):

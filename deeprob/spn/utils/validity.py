@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Optional, List
+
+import numpy as np
 
 from deeprob.context import is_check_spn_enabled
 from deeprob.spn.structure.node import Node, Sum, Product
@@ -81,8 +81,7 @@ def is_smooth(root: Node, sum_nodes: Optional[List[Sum]] = None) -> Optional[str
             return "Sum node #{} has no children".format(node.id)
         if len(node.children) != len(node.weights):
             return "Weights and children length mismatch in node #{}".format(node.id)
-        s_scope = set(node.scope)
-        if any(map(lambda c: set(c.scope) != s_scope, node.children)):
+        if any(map(lambda c: set(c.scope) != set(node.scope), node.children)):
             return "Children of Sum node #{} have different scopes".format(node.id)
     return None
 
@@ -122,16 +121,15 @@ def is_structured_decomposable(root: Node, nodes: Optional[List[Node]] = None, v
     if nodes is None:
         nodes = collect_nodes(root)
 
-    scopes_set = set()
+    s_scope = set()
     for n in nodes:
         if isinstance(n, Product):
-            scopes_set.add(tuple(sorted(n.scope)))
+            s_scope.add(tuple(sorted(n.scope)))
         elif isinstance(n, BinaryCLT):
-            scopes_set.update([tuple(sorted(scope)) for scope in n.get_scopes()])
+            s_scope.update([tuple(sorted(scope)) for scope in n.get_scopes()])
         elif not isinstance(n, Sum) and not isinstance(n, Leaf):
-            raise Exception("Case not yet considered for %s nodes" % (type(n)))
-
-    scopes = [set(t) for t in list(scopes_set)]
+            raise Exception("Case not yet considered for {} nodes".format(type(n)))
+    scopes = [set(t) for t in list(s_scope)]
 
     # Ordering scopes is not needed, but useful for printing when verbose = True
     if verbose:
@@ -140,11 +138,11 @@ def is_structured_decomposable(root: Node, nodes: Optional[List[Node]] = None, v
             print(scope)
 
     # Quadratic in the number of product nodes, but at least does not require a vtree structure
-    for i in range(len(scopes)):
-        for j in range(len(scopes)):
-            int_len = len(scopes[i].intersection(scopes[j]))
-            if int_len != 0 and int_len != min(len(scopes[i]), len(scopes[j])):
-                return "Intersection between scope {} and scope {}".format(scopes[i], scopes[j])
+    for s1 in scopes:
+        for s2 in scopes:
+            int_len = len(s1.intersection(s2))
+            if int_len != 0 and int_len != min(len(s1), len(s2)):
+                return "Intersection between scope {} and scope {}".format(s1, s2)
     return None
 
 

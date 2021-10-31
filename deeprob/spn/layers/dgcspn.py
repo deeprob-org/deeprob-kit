@@ -1,10 +1,10 @@
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
 from itertools import product
 from typing import Optional, Union, Tuple
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch import nn
 
 from deeprob.torch.initializers import dirichlet_
 
@@ -33,7 +33,7 @@ class SpatialGaussianLayer(nn.Module):
         if quantiles_loc is not None and uniform_loc is not None:
             raise ValueError("At most one between quantiles_loc and uniform_loc can be specified")
 
-        super(SpatialGaussianLayer, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_features = (out_channels, self.in_height, self.in_width)
         self.dropout = dropout
@@ -142,7 +142,7 @@ class SpatialProductLayer(nn.Module):
         :param depthwise: Whether to use depthwise convolutions. If False, random sparse kernels are used.
         :raises ValueError: If a parameter is out of domain.
         """
-        super(SpatialProductLayer, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.groups = self.in_channels if depthwise else 1
 
@@ -248,7 +248,7 @@ class SpatialSumLayer(nn.Module):
         :param out_channels: The number of output channels.
         :param dropout: The input nodes dropout rate. It can be None.
         """
-        super(SpatialSumLayer, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_features = (out_channels, self.in_height, self.in_width)
         self.dropout = dropout
@@ -314,7 +314,7 @@ class SpatialRootLayer(nn.Module):
         :param in_features: The number of input features.
         :param out_channels: The number of output channels.
         """
-        super(SpatialRootLayer, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_channels = out_channels
 

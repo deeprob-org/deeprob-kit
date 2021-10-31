@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Optional, List
+
+import numpy as np
 
 from deeprob.utils.random import RandomState, check_random_state
 

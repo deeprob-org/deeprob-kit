@@ -1,19 +1,22 @@
+from typing import Optional, Tuple, Type
+
 import torch
 import torch.nn.functional as F
-
-from typing import Optional, Tuple
 
 from deeprob.utils.random import RandomState
 from deeprob.utils.region import RegionGraph
 from deeprob.torch.base import ProbabilisticModel
 from deeprob.torch.constraints import ScaleClipper
-from deeprob.spn.layers.ratspn import GaussianLayer, BernoulliLayer, SumLayer, ProductLayer, RootLayer
+from deeprob.spn.layers.ratspn import RegionGraphLayer, GaussianLayer, BernoulliLayer
+from deeprob.spn.layers.ratspn import SumLayer, ProductLayer, RootLayer
 
 
 class RatSpn(ProbabilisticModel):
     def __init__(
         self,
         in_features: int,
+        base_cls: Type[RegionGraphLayer],
+        base_kwargs: Optional[dict] = None,
         out_classes: int = 1,
         rg_depth: int = 2,
         rg_repetitions: int = 1,
@@ -27,6 +30,8 @@ class RatSpn(ProbabilisticModel):
         Initialize a RAT-SPN.
 
         :param in_features: The number of input features.
+        :param base_cls: The base distribution's class. It must be a sub-class of RegionGraphLayer.
+        :param base_kwargs: Optional additiona parameters to pass to the base distribution's class constructor.
         :param out_classes: The number of output classes. Specify 1 in case of plain density estimation.
         :param rg_depth: The depth of the region graph.
         :param rg_repetitions: The number of independent repetitions of the region graph.
@@ -37,6 +42,8 @@ class RatSpn(ProbabilisticModel):
         :param random_state: The random state. It can be either None, a seed integer or a Numpy RandomState.
         :raises ValueError: If a parameter is out of domain.
         """
+        if not issubclass(base_cls, RegionGraphLayer):
+            raise ValueError("The base distribution's class must be a sub-class of RegionGraphLayer")
         if in_features <= 0:
             raise ValueError("The number of input features must be positve")
         if out_classes <= 0:
@@ -50,7 +57,7 @@ class RatSpn(ProbabilisticModel):
         if sum_dropout is not None and (sum_dropout <= 0.0 or sum_dropout >= 1.0):
             raise ValueError("The dropout rate at sum layers must be in (0, 1)")
 
-        super(ProbabilisticModel, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_classes = out_classes
         self.rg_depth = rg_depth
@@ -58,9 +65,7 @@ class RatSpn(ProbabilisticModel):
         self.rg_sum = rg_sum
         self.in_dropout = in_dropout
         self.sum_dropout = sum_dropout
-        self.base_layer = None
         self.layers = torch.nn.ModuleList()
-        self.root_layer = None
 
         # Instantiate the region graph
         region_graph = RegionGraph(self.in_features, self.rg_depth, random_state)
@@ -69,14 +74,14 @@ class RatSpn(ProbabilisticModel):
         rg_layers = region_graph.make_layers(rg_repetitions)
         self.rg_layers = list(reversed(rg_layers))
 
-    def build_layers(self):
-        """
-        Build the RatSpn layers.
-
-        :raises ValueError: If the base layer is not already initialized.
-        """
-        if self.base_layer is None:
-            raise ValueError("The base layer must be initialized first")
+        # Instantiate the base distributions layer
+        if base_kwargs is None:
+            base_kwargs = dict()
+        self.base_layer = base_cls(
+            self.in_features, self.rg_batch,
+            regions=self.rg_layers[0], rg_depth=self.rg_depth, dropout=self.in_dropout,
+            **base_kwargs
+        )
 
         # Alternate between product and sum layer
         in_groups = self.base_layer.in_regions
@@ -175,11 +180,13 @@ class RatSpn(ProbabilisticModel):
         return samples
 
     def loss(self, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
-        if self.out_classes == 1:  # Generative setting, return average negative log-likelihood
+        # Generative setting, return average negative log-likelihood
+        if self.out_classes == 1:
             return -torch.mean(x)
-        else:  # Discriminative setting, return cross-entropy loss
-            logits = torch.log_softmax(x, dim=1)
-            return F.nll_loss(logits, y)
+
+        # Discriminative setting, return cross-entropy loss
+        logits = torch.log_softmax(x, dim=1)
+        return F.nll_loss(logits, y)
 
 
 class GaussianRatSpn(RatSpn):
@@ -212,25 +219,17 @@ class GaussianRatSpn(RatSpn):
         :param uniform_loc: The optional uniform distribution parameters for location initialization.
         :param optimize_scale: Whether to train scale and location jointly.
         """
-        super(GaussianRatSpn, self).__init__(
-            in_features, out_classes, rg_depth, rg_repetitions,
-            rg_batch, rg_sum, in_dropout, sum_dropout, random_state
+        super().__init__(
+            in_features,
+            GaussianLayer, {'uniform_loc': uniform_loc, 'optimize_scale': optimize_scale},
+            out_classes, rg_depth, rg_repetitions, rg_batch, rg_sum,
+            in_dropout, sum_dropout, random_state
         )
 
         # Initialize the scale clipper, if specified
         self.optimize_scale = optimize_scale
         if self.optimize_scale:
             self.scale_clipper = ScaleClipper()
-
-        # Instantiate the base distributions layer
-        self.base_layer = GaussianLayer(
-            self.in_features, self.rg_batch,
-            regions=self.rg_layers[0], rg_depth=self.rg_depth, dropout=self.in_dropout,
-            uniform_loc=uniform_loc, optimize_scale=self.optimize_scale
-        )
-
-        # Build the layers
-        self.build_layers()
 
     def apply_constraints(self):
         # Apply the scale clipper to the base layer, if specified
@@ -264,16 +263,9 @@ class BernoulliRatSpn(RatSpn):
         :param sum_dropout: The dropout rate for probabilistic dropout at product layer outputs. It can be None.
         :param random_state: The random state. It can be either None, a seed integer or a Numpy RandomState.
         """
-        super(BernoulliRatSpn, self).__init__(
-            in_features, out_classes, rg_depth, rg_repetitions,
-            rg_batch, rg_sum, in_dropout, sum_dropout, random_state
+        super().__init__(
+            in_features,
+            BernoulliLayer, None,
+            out_classes, rg_depth, rg_repetitions, rg_batch, rg_sum,
+            in_dropout, sum_dropout, random_state
         )
-
-        # Instantiate the base distributions layer
-        self.base_layer = BernoulliLayer(
-            self.in_features, self.rg_batch,
-            regions=self.rg_layers[0], rg_depth=self.rg_depth, dropout=self.in_dropout
-        )
-
-        # Build the layers
-        self.build_layers()

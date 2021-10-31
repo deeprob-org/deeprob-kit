@@ -1,8 +1,8 @@
+from typing import Union, Optional, Tuple, List
+
 import numpy as np
 import torch
-import torch.utils.data as data
-
-from typing import Union, Optional, Tuple, List
+from torch.utils import data
 
 from deeprob.torch.transforms import Transform
 
@@ -10,29 +10,29 @@ from deeprob.torch.transforms import Transform
 class UnsupervisedDataset(data.Dataset):
     def __init__(
         self,
-        data: Union[np.ndarray, torch.Tensor],
+        dataset: Union[np.ndarray, torch.Tensor],
         transform: Optional[Union[Transform]] = None
     ):
         """
         Initialize an unsupervised dataset.
 
-        :param data: The data.
+        :param dataset: The dataset.
         :param transform: An optional transformation to apply.
         """
-        super(UnsupervisedDataset, self).__init__()
-        if isinstance(data, np.ndarray):
-            data = torch.tensor(data, dtype=torch.float32)
-        elif data.dtype != torch.float32:
-            data = data.float()
+        super().__init__()
+        if isinstance(dataset, np.ndarray):
+            dataset = torch.tensor(dataset, dtype=torch.float32)
+        elif dataset.dtype != torch.float32:
+            dataset = dataset.float()
 
-        self.data = data
+        self.dataset = dataset
         self.transform = transform
 
         # Compute the features shape
         if self.transform is None:
-            shape = tuple(self.data.shape[1:])
+            shape = tuple(self.dataset.shape[1:])
         else:
-            shape = tuple(self.transform(self.data[0]).shape)
+            shape = tuple(self.transform(self.dataset[0]).shape)
         self.shape = shape[0] if len(shape) == 1 else shape
 
     @property
@@ -42,7 +42,7 @@ class UnsupervisedDataset(data.Dataset):
 
     def __len__(self) -> int:
         """Get the number of examples."""
-        return len(self.data)
+        return len(self.dataset)
 
     def __getitem__(self, i) -> torch.Tensor:
         """
@@ -51,7 +51,7 @@ class UnsupervisedDataset(data.Dataset):
         :param i: The index of the example.
         :return: The example features.
         """
-        x = self.data[i]
+        x = self.dataset[i]
         if self.transform is not None:
             x = self.transform(x)
         return x
@@ -60,36 +60,36 @@ class UnsupervisedDataset(data.Dataset):
 class SupervisedDataset(data.Dataset):
     def __init__(
         self,
-        data: Union[np.ndarray, torch.Tensor],
+        dataset: Union[np.ndarray, torch.Tensor],
         targets: Union[np.ndarray, torch.Tensor],
         transform: Optional[Union[Transform]] = None
     ):
         """
         Initialize a supervised dataset.
 
-        :param data: The data.
+        :param dataset: The dataset.
         :param targets: The targets.
         :param transform: An optional transformation to apply.
         """
-        super(SupervisedDataset, self).__init__()
-        if isinstance(data, np.ndarray):
-            data = torch.tensor(data, dtype=torch.float32)
-        elif data.dtype != torch.float32:
-            data = data.float()
+        super().__init__()
+        if isinstance(dataset, np.ndarray):
+            dataset = torch.tensor(dataset, dtype=torch.float32)
+        elif dataset.dtype != torch.float32:
+            dataset = dataset.float()
         if isinstance(targets, np.ndarray):
             targets = torch.tensor(targets, dtype=torch.int64)
         elif targets.dtype != torch.int64:
             targets = targets.long()
 
-        self.data = data
+        self.dataset = dataset
         self.targets = targets
         self.transform = transform
 
         # Compute the features shape
         if self.transform is None:
-            shape = tuple(self.data[0].shape)
+            shape = tuple(self.dataset[0].shape)
         else:
-            shape = tuple(self.transform(self.data[0]).shape)
+            shape = tuple(self.transform(self.dataset[0]).shape)
         self.shape = shape[0] if len(shape) == 1 else shape
 
         # Obtain the classes
@@ -107,7 +107,7 @@ class SupervisedDataset(data.Dataset):
 
     def __len__(self) -> int:
         """Get the number of examples."""
-        return len(self.data)
+        return len(self.dataset)
 
     def __getitem__(self, i) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -116,7 +116,7 @@ class SupervisedDataset(data.Dataset):
         :param i: The index of the example.
         :return: The example features and the target.
         """
-        x, y = self.data[i], self.targets[i]
+        x, y = self.dataset[i], self.targets[i]
         if self.transform is not None:
             x = self.transform(x)
         return x, y
@@ -138,7 +138,7 @@ class WrappedDataset(data.Dataset):
         :param classes: The class domain. It can be None if unsupervised is True.
         :param transform: An optional transformation to apply.
         """
-        super(WrappedDataset, self).__init__()
+        super().__init__()
         self.dataset = dataset
         self.unsupervised = unsupervised
         self.transform = transform

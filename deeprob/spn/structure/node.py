@@ -1,12 +1,10 @@
 from __future__ import annotations
-
 import abc
-import numpy as np
-
 from typing import Optional, Union, List, Iterator
-
 from collections import deque, defaultdict
-from scipy.special import softmax, logsumexp
+
+import numpy as np
+from scipy.special import logsumexp
 
 
 class Node(abc.ABC):
@@ -38,7 +36,6 @@ class Node(abc.ABC):
         :param x: The inputs.
         :return: The resulting likelihoods.
         """
-        pass
 
     @abc.abstractmethod
     def log_likelihood(self, x: np.ndarray) -> np.ndarray:
@@ -48,7 +45,6 @@ class Node(abc.ABC):
         :param x: The inputs.
         :return: The resulting log-likelihoods.
         """
-        pass
 
 
 class Sum(Node):
@@ -88,7 +84,7 @@ class Sum(Node):
                 raise ValueError("Weights don't sum up to 1")
         self.weights = weights
 
-        super(Sum, self).__init__(scope, children)
+        super().__init__(scope, children)
 
     def em_init(self, random_state: np.random.RandomState):
         """
@@ -146,7 +142,7 @@ class Product(Node):
             elif set(scope) != s_scope:
                 raise ValueError("Children of Product node don't have disjointed scopes")
 
-        super(Product, self).__init__(scope, children)
+        super().__init__(scope, children)
 
     def likelihood(self, x: np.ndarray) -> np.ndarray:
         return np.prod(x, axis=1, keepdims=True)

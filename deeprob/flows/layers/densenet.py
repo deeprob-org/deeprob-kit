@@ -1,9 +1,9 @@
-import torch
-import torch.nn as nn
-
 from typing import List
 
+import torch
+from torch import nn
 from torch.utils.checkpoint import checkpoint
+
 from deeprob.torch.utils import WeightNormConv2d
 
 
@@ -17,7 +17,7 @@ class DenseLayer(nn.Module):
         :param use_checkpoint: Whether to use a checkpoint in order to reduce memory usage
                                (by increasing training time caused by re-computations).
         """
-        super(DenseLayer, self).__init__()
+        super().__init__()
         self.use_checkpoint = use_checkpoint
 
         # Build the bottleneck network
@@ -86,7 +86,7 @@ class DenseBlock(nn.Module):
         :param use_checkpoint: Whether to use a checkpoint in order to reduce memory usage
                               (by increasing training time caused by re-computations).
         """
-        super(DenseBlock, self).__init__()
+        super().__init__()
         self.layers = nn.ModuleList()
 
         # Build the dense layers
@@ -118,7 +118,7 @@ class Transition(nn.Module):
         :param out_channels: The number of output channels.
         :param bias: Whether to use bias in the last convolutional layer.
         """
-        super(Transition, self).__init__()
+        super().__init__()
 
         # Build the transition layer
         self.network = torch.nn.Sequential(
@@ -156,7 +156,7 @@ class DenseNetwork(nn.Module):
         :param use_checkpoint: Whether to use a checkpoint in order to reduce memory usage
                               (by increasing training time caused by re-computations).
         """
-        super(DenseNetwork, self).__init__()
+        super().__init__()
         self.blocks = nn.ModuleList()
 
         # Build the input convolutional layer

@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Optional, Union, Tuple, Any, Callable
+
+import numpy as np
 
 from deeprob.spn.structure.leaf import Leaf
 from deeprob.spn.structure.node import Node, Sum, Product, topological_order
@@ -41,7 +41,7 @@ def eval_bottom_up(
     if node_func_kwargs is None:
         node_func_kwargs = dict()
 
-    n_samples, n_features = x.shape
+    n_samples, _ = x.shape
     ls = np.empty(shape=(len(nodes), n_samples), dtype=np.float32)
 
     for node in reversed(nodes):
@@ -95,7 +95,7 @@ def eval_top_down(
 
     if not inplace:
         x = np.copy(x)
-    n_samples, n_features = x.shape
+    n_samples, _ = x.shape
 
     # Build the array consisting of top-down path masks
     masks = np.zeros(shape=(len(nodes), n_samples), dtype=np.bool_)

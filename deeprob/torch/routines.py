@@ -1,13 +1,13 @@
 import os
 import time
+from typing import Union, Optional, Tuple, Dict
+
 import numpy as np
 import torch
-import torch.optim as optim
-import torch.utils.data as data
-
+from torch import optim
+from torch.utils import data
 from tqdm import tqdm
 from sklearn import metrics
-from typing import Union, Optional, Tuple, Dict
 
 from deeprob.torch.base import ProbabilisticModel
 from deeprob.torch.utils import get_optimizer_class
@@ -85,13 +85,12 @@ def train_model(
             model, train_loader, valid_loader, optimizer, device,
             early_stopping, epochs, train_base, verbose
         )
-    elif setting == 'discriminative':
+    if setting == 'discriminative':
         return train_discriminative(
             model, train_loader, valid_loader, optimizer, device,
             early_stopping, epochs, train_base, verbose
         )
-    else:
-        raise ValueError("Unknown train setting called {}".format(setting))
+    raise ValueError("Unknown train setting called {}".format(setting))
 
 
 def train_generative(
@@ -382,10 +381,9 @@ def test_model(
     # Test the model
     if setting == 'generative':
         return test_generative(model, test_loader, device, verbose)
-    elif setting == 'discriminative':
+    if setting == 'discriminative':
         return test_discriminative(model, test_loader, device, verbose)
-    else:
-        raise ValueError("Unknown test setting called {}".format(setting))
+    raise ValueError("Unknown test setting called {}".format(setting))
 
 
 def test_generative(

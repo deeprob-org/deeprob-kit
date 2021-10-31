@@ -1,9 +1,9 @@
 import abc
+from typing import Union, Tuple
+
 import numpy as np
 import torch
-import torch.nn as nn
-
-from typing import Union, Tuple
+from torch import nn
 
 
 def squeeze_depth2d(x: torch.Tensor) -> torch.Tensor:
@@ -49,7 +49,7 @@ class Bijector(abc.ABC, nn.Module):
             if not isinstance(in_features, tuple) or len(in_features) != 3:
                 raise ValueError("The number of input features must be either an int or a (C, H, W) tuple")
 
-        super(Bijector, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_features = in_features
 
@@ -63,8 +63,7 @@ class Bijector(abc.ABC, nn.Module):
         """
         if backward:
             return self.apply_backward(x)
-        else:
-            return self.apply_forward(x)
+        return self.apply_forward(x)
 
     @abc.abstractmethod
     def apply_backward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -74,7 +73,6 @@ class Bijector(abc.ABC, nn.Module):
         :param x: The inputs.
         :return: The transformed samples and the backward log-det-jacobian.
         """
-        pass
 
     @abc.abstractmethod
     def apply_forward(self, u: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -84,7 +82,6 @@ class Bijector(abc.ABC, nn.Module):
         :param u: The inputs.
         :return: The transformed samples and the forward log-det-jacobian.
         """
-        pass
 
 
 class BatchNormLayer1d(Bijector):
@@ -102,7 +99,7 @@ class BatchNormLayer1d(Bijector):
         if eps <= 0.0:
             raise ValueError("The epsilon value must be positive")
 
-        super(BatchNormLayer1d, self).__init__(in_features)
+        super().__init__(in_features)
         self.momentum = momentum
         self.eps = eps
 
@@ -167,7 +164,7 @@ class BatchNormLayer2d(Bijector):
         if eps <= 0.0:
             raise ValueError("The epsilon value must be positive")
 
-        super(BatchNormLayer2d, self).__init__(in_features)
+        super().__init__(in_features)
         self.momentum = momentum
         self.eps = eps
 
@@ -232,7 +229,7 @@ class DequantizeLayer(Bijector):
         if n_bits <= 0:
             raise ValueError("The number of bits must be positive")
 
-        super(DequantizeLayer, self).__init__(in_features)
+        super().__init__(in_features)
         self.n_bits = n_bits
         self.bins = 2 ** self.n_bits
 
@@ -265,7 +262,7 @@ class LogitLayer(Bijector):
         if alpha <= 0.0 or alpha >= 1.0:
             raise ValueError("The alpha logit parameter must be in (0, 1)")
 
-        super(LogitLayer, self).__init__(in_features)
+        super().__init__(in_features)
         self.alpha = alpha
 
         # Cache part of the log-det-jacobian as a constant

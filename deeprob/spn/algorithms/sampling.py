@@ -1,5 +1,5 @@
 import numpy as np
-import scipy.stats as stats
+from scipy import stats
 
 from deeprob.context import ContextState
 from deeprob.spn.structure.node import Node, Sum

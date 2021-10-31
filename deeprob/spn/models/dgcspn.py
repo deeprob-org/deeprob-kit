@@ -1,9 +1,9 @@
+from typing import Optional, Union, Tuple, List
+
 import numpy as np
 import torch
-import torch.autograd as autograd
 import torch.nn.functional as F
-
-from typing import Optional, Union, Tuple, List
+from torch import autograd
 
 from deeprob.torch.base import ProbabilisticModel
 from deeprob.torch.constraints import ScaleClipper
@@ -74,7 +74,7 @@ class DgcSpn(ProbabilisticModel):
         if n_pooling < 0 or n_pooling > depth:
             raise ValueError("The number of initial pooling spatial product layers must be in [0, ceil(log2(D))]")
 
-        super(DgcSpn, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_classes = out_classes
         self.n_batch = n_batch
@@ -185,11 +185,13 @@ class DgcSpn(ProbabilisticModel):
         raise NotImplementedError("Sampling is not implemented for DGC-SPNs")
 
     def loss(self, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
-        if self.out_classes == 1:  # Generative setting, return average negative log-likelihood
+        # Generative setting, return average negative log-likelihood
+        if self.out_classes == 1:
             return -torch.mean(x)
-        else:  # Discriminative setting, return cross-entropy loss
-            logits = torch.log_softmax(x, dim=1)
-            return F.nll_loss(logits, y)
+
+        # Discriminative setting, return cross-entropy loss
+        logits = torch.log_softmax(x, dim=1)
+        return F.nll_loss(logits, y)
 
     def apply_constraints(self):
         # Apply the scale clipper to the base layer, if specified

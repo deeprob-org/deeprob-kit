@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Union, Tuple
+
+import numpy as np
 
 from deeprob.context import ContextState
 from deeprob.spn.structure.node import Node, Sum

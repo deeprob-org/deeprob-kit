@@ -1,7 +1,8 @@
 from __future__ import annotations
-import numpy as np
 import itertools
 from typing import Optional, Tuple
+
+import numpy as np
 
 
 class Partition:
@@ -162,8 +163,7 @@ class Partition:
 
         if conj_row_ids_l:
             return conj_row_ids_l, discarded_row_ids, conj_vars
-        else:
-            return [], np.array([]), []
+        return [], np.array([]), []
 
 
 def generate_random_partitioning(
@@ -231,7 +231,7 @@ def generate_random_partitioning(
                               parent_partition=part))
 
             discarded_assignments = \
-                set([tuple(assignment) for assignment in itertools.product([0, 1], repeat=len(conj_vars))])
+                {tuple(assignment) for assignment in itertools.product([0, 1], repeat=len(conj_vars))}
 
             for k in range(len(part_buffer)):
                 part = part_buffer[k]

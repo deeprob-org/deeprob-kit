@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Optional
+
+import numpy as np
 from tqdm import tqdm
 
 from deeprob.context import ContextState

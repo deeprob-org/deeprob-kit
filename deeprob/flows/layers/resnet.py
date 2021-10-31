@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from torch import nn
 
 from deeprob.torch.utils import WeightNormConv2d
 
@@ -11,7 +11,7 @@ class ResidualBlock(nn.Module):
 
         :param n_channels: The number of channels.
         """
-        super(ResidualBlock, self).__init__()
+        super().__init__()
 
         # Build the residual block
         self.block = nn.Sequential(
@@ -47,7 +47,7 @@ class ResidualNetwork(nn.Module):
         if n_blocks <= 0:
             raise ValueError("The number of residual blocks must be positve")
 
-        super(ResidualNetwork, self).__init__()
+        super().__init__()
         self.blocks = nn.ModuleList()
         self.skips = nn.ModuleList()
 

@@ -1,10 +1,10 @@
 import warnings
-import numpy as np
-
 from typing import Union, Type, List
 
+import numpy as np
 from sklearn import mixture, cluster
 from sklearn.exceptions import ConvergenceWarning
+
 from deeprob.spn.structure.leaf import Leaf, LeafType
 from deeprob.utils.data import mixed_ohe_data
 
@@ -27,7 +27,7 @@ def gmm(
     :return: An array where each element is the cluster where the corresponding data belong.
     """
     # Convert the data using One Hot Encoding, in case of non-binary discrete features
-    if any([len(d) > 2 for d in domains]):
+    if any(len(d) > 2 for d in domains):
         data = mixed_ohe_data(data, domains)
 
     # Apply GMM
@@ -54,7 +54,7 @@ def kmeans(
     :return: An array where each element is the cluster where the corresponding data belong.
     """
     # Convert the data using One Hot Encoding, in case of non-binary discrete features
-    if any([len(d) > 2 for d in domains]):
+    if any(len(d) > 2 for d in domains):
         data = mixed_ohe_data(data, domains)
 
     # Apply K-Means
@@ -81,7 +81,7 @@ def kmeans_mb(
     :return: An array where each element is the cluster where the corresponding data belong.
     """
     # Convert the data using One Hot Encoding, in case of non-binary discrete features
-    if any([len(d) > 2 for d in domains]):
+    if any(len(d) > 2 for d in domains):
         data = mixed_ohe_data(data, domains)
 
     # Apply K-Means MiniBatch
@@ -110,11 +110,11 @@ def dbscan(
     :raises ValueError: If the leaf distributions are NOT discrete.
     """
     # Control if distribution are binary
-    if not all([x.LEAF_TYPE == LeafType.DISCRETE for x in distributions]):
+    if not all(x.LEAF_TYPE == LeafType.DISCRETE for x in distributions):
         raise ValueError('DBScan clustering can be applied only on discrete attributes')
-    
+
     # Convert the data using One Hot Encoding, in case of non-binary discrete features
-    if any([len(d) > 2 for d in domains]):
+    if any(len(d) > 2 for d in domains):
         data = mixed_ohe_data(data, domains)
 
     # Apply DBSCAN
@@ -142,16 +142,14 @@ def wald(
     :raises ValueError: If the leaf distributions are NOT discrete.
     """
     # Control if distribution are binary
-    if not all([x.LEAF_TYPE == LeafType.DISCRETE for x in distributions]):
+    if not all(x.LEAF_TYPE == LeafType.DISCRETE for x in distributions):
         raise ValueError('DBScan clustering can be applied only on discrete attributes')
-    
+
     # Convert the data using One Hot Encoding, in case of non-binary discrete features
-    if any([len(d) > 2 for d in domains]):
+    if any(len(d) > 2 for d in domains):
         data = mixed_ohe_data(data, domains)
 
     # Apply Wald
     with warnings.catch_warnings():
         warnings.simplefilter(action='ignore', category=ConvergenceWarning)  # Ignore convergence warnings
         return cluster.AgglomerativeClustering(n, linkage='ward').fit_predict(data)
-
-

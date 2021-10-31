@@ -1,9 +1,9 @@
+from typing import Optional, Tuple
+
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-
-from typing import Optional, Tuple
+from torch import nn
 
 from deeprob.torch.base import DensityEstimator
 from deeprob.flows.utils import BatchNormLayer1d
@@ -45,7 +45,7 @@ class RealNVP1d(NormalizingFlow):
         if units <= 0:
             raise ValueError("The number of hidden units per layer must be positive")
 
-        super(RealNVP1d, self).__init__(in_features, dequantize=dequantize, logit=logit, in_base=in_base)
+        super().__init__(in_features, dequantize=dequantize, logit=logit, in_base=in_base)
         self.n_flows = n_flows
         self.depth = depth
         self.units = units
@@ -105,7 +105,7 @@ class RealNVP2d(NormalizingFlow):
         if channels <= 0:
             raise ValueError("The number of channels must be positive")
 
-        super(RealNVP2d, self).__init__(in_features, dequantize=dequantize, logit=logit, in_base=in_base)
+        super().__init__(in_features, dequantize=dequantize, logit=logit, in_base=in_base)
         self.n_flows = n_flows
         self.network = network
         self.n_blocks = n_blocks
