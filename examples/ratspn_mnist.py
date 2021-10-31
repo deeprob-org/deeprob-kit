@@ -1,3 +1,4 @@
+import json
 import torch
 import torch.utils.data as data
 import torchvision.datasets as datasets
@@ -6,7 +7,6 @@ import torchvision.transforms as transforms
 import deeprob.spn.models as spn
 from deeprob.torch.transforms import Flatten
 from deeprob.torch.routines import train_model, test_model
-
 
 if __name__ == '__main__':
     n_features, n_classes = 784, 10
@@ -46,7 +46,10 @@ if __name__ == '__main__':
     # Test the model, plotting the test negative log-likelihood and some classification metrics
     nll, metrics = test_model(ratspn, data_test, setting='discriminative')
     print('Test NLL: {:.4f}'.format(nll))
-    print('Test Metrics: {}'.format(metrics))
+    metrics = json.loads(json.dumps(metrics), parse_float=lambda x: round(float(x), 2))
+    print('Test Metrics: {}'.format(json.dumps(metrics, indent=4)))
 
     # Save the RAT-SPN to file, as any Torch model
-    torch.save(ratspn.state_dict(), 'ratspn-mnist.pt')
+    model_filename = 'ratspn-mnist.pt'
+    print("Saving model's definition and parameters to {}".format(model_filename))
+    torch.save(ratspn.state_dict(), model_filename)

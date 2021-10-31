@@ -55,16 +55,18 @@ if __name__ == '__main__':
     # Also, compute bits-per-dimension
     mu_ll, sigma_ll = test_model(maf, data_test, setting='generative', batch_size=64)
     bpp = (-mu_ll / np.log(2)) / in_features
-    print('Mean LL: {} - Two Stddev LL: {} - Bits per Dimension: {}'.format(
-        round(mu_ll, 2), round(sigma_ll, 2), round(bpp, 3)
-    ))
+    print('Mean LL: {:.4f} - Two Stddev LL: {:.4f} - Bits per Dimension: {:.2f}'.format(mu_ll, sigma_ll, bpp))
 
     # Sample some data points and plot them
     maf.eval()  # Make sure to switch to evaluation mode
     n_samples = 10
     samples = maf.sample(n_samples ** 2).cpu()
     images = torch.stack([transform.backward(x) for x in samples])
-    utils.save_image(images, 'maf-cifar10-samples.png', nrow=n_samples, padding=0)
+    samples_filename = 'maf-cifar10-samples.png'
+    print("Plotting generated samples to {} ...".format(samples_filename))
+    utils.save_image(images, samples_filename, nrow=n_samples, padding=0)
 
     # Save the model to file
-    torch.save(maf.state_dict(), 'maf-cifar10.pt')
+    model_filename = 'maf-cifar10.pt'
+    print("Saving model's definition and parameters to {}".format(model_filename))
+    torch.save(maf.state_dict(), model_filename)

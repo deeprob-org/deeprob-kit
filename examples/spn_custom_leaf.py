@@ -75,17 +75,21 @@ if __name__ == '__main__':
 
     # Compute the average likelihood
     ls = spnalg.likelihood(root, data)
-    print("Average Likelihood: {}".format(np.mean(ls)))
+    print("Average Likelihood: {:.4f}".format(np.mean(ls)))
 
     # Print some statistics about the model's structure and parameters
+    print("SPN structure and parameters statistics:")
     print(spnutils.compute_statistics(root))
 
     # Save the model to a JSON file
-    spn.save_spn_json(root, 'spn-custom-cauchy.json')
+    spn_filename = 'spn-custom-cauchy.json'
+    print("Saving the SPN structure and parameters to {} ...".format(spn_filename))
+    spn.save_spn_json(root, spn_filename)
     del root
 
     # Reload the model from file
     # Note that we need to specify the custom leaf
+    print("Re-loading the SPN structure and parameters from {} ...".format(spn_filename))
     root = spn.load_spn_json('spn-custom-cauchy.json', leaves=[Cauchy])
     ls = spnalg.likelihood(root, data)
-    print("Average Likelihood: {}".format(np.mean(ls)))
+    print("Average Likelihood: {:.4f}".format(np.mean(ls)))

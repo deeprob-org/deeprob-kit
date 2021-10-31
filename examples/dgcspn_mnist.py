@@ -1,3 +1,4 @@
+import json
 import torch
 import torch.utils.data as data
 import torchvision.datasets as datasets
@@ -30,7 +31,7 @@ if __name__ == '__main__':
         sum_channels=32,         # The sum layers number of channels
         depthwise=True,          # Use depthwise convolutions at every product layer
         n_pooling=2,             # Then number of initial pooling product layers
-        in_dropout=0.2,  # THe probabilistic dropout rate to use at leaves layer
+        in_dropout=0.2,          # The probabilistic dropout rate to use at leaves layer
         sum_dropout=0.2,         # The probabilistic dropout rate to use at sum layers
         uniform_loc=(-1.5, 1.5)  # Initialize Gaussian locations uniformly
     )
@@ -44,7 +45,10 @@ if __name__ == '__main__':
     # Test the model, plotting the test negative log-likelihood and some classification metrics
     nll, metrics = test_model(dgcspn, data_test, batch_size=64, setting='discriminative')
     print('Test NLL: {:.4f}'.format(nll))
-    print('Test Metrics: {}'.format(metrics))
+    metrics = json.loads(json.dumps(metrics), parse_float=lambda x: round(float(x), 2))
+    print('Test Metrics: {}'.format(json.dumps(metrics, indent=4)))
 
-    # Save the DGC-SPN to file, as any Torch model
-    torch.save(dgcspn.state_dict(), 'dgcspn-mnist.pt')
+    # Save the model to file
+    model_filename = 'dgcspn-mnist.pt'
+    print("Saving model's definition and parameters to {}".format(model_filename))
+    torch.save(dgcspn.state_dict(), model_filename)

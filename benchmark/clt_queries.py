@@ -103,7 +103,7 @@ if __name__ == '__main__':
         end_time = time.perf_counter()
         elapsed_times.append(1e3 * (end_time - start_time))
     mean_time, stddev_time = compute_mean_stddev_times(elapsed_times)
-    print("[SMP] DeeProb-kit Avg. Time: {:.2f}ms (+- {:.2f})".format(
+    print("[Sampling] DeeProb-kit Avg. Time: {:.2f}ms (+- {:.2f})".format(
         mean_time, stddev_time
     ))
 

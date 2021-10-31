@@ -24,10 +24,14 @@ if __name__ == '__main__':
     # Evaluate the binary CLT
     clt_ll = clt.log_likelihood(data).mean()
 
-    # Convert the CLT into a structured decomposable SPN and plot it
+    # Convert the CLT into a structured decomposable SPN
     root = clt.to_pc()
     spnutils.check_spn(root, labeled=True, smooth=True, decomposable=True, structured_decomposable=True)
-    spn.plot_spn(root, 'clt-to-spn.svg')
+
+    # Plot the SPN
+    spn_filename = 'clt-to-spn.svg'
+    print("Plotting the compiled SPN to {} ...".format(spn_filename))
+    spn.plot_spn(root, spn_filename)
 
     # Evaluate the SPN
     spn_ll = spnalg.log_likelihood(root, data).mean()

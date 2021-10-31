@@ -32,4 +32,7 @@ if __name__ == '__main__':
     realnvp.eval()  # Make sure to switch to evaluation mode
     samples = realnvp.sample(1000).cpu().numpy()
     plt.scatter(samples[:, 0], samples[:, 1], marker='o', s=2)
-    plt.show()
+
+    scatter_filename = 'realnvp-moons-scatter.png'
+    print("Plotting scatter plot to {} ...".format(scatter_filename))
+    plt.savefig(scatter_filename, dpi=192)

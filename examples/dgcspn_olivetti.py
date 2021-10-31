@@ -58,12 +58,12 @@ if __name__ == '__main__':
     # Train the model using generative setting, i.e. by maximizing the log-likelihood
     train_model(
         dgcspn, data_train, data_test, setting='generative',
-        lr=1e-2, batch_size=64, epochs=200, checkpoint='checkpoint-dgcspn-olivetti.pt', verbose=False
+        lr=1e-2, batch_size=64, epochs=1, checkpoint='checkpoint-dgcspn-olivetti.pt', verbose=False
     )
 
     # Test the model using generative setting
     mu_ll, sigma_ll = test_model(dgcspn, data_test, setting='generative', batch_size=64)
-    print('Mean LL: {} - Two Stddev LL: {}'.format(round(mu_ll, 2), round(sigma_ll, 2)))
+    print('Mean LL: {:.4f} - Two Stddev LL: {:.4f}'.format(mu_ll, sigma_ll))
 
     # Compute image tensors with some missing data patterns
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     # Note the multiplication by two, because we only consider the error on the completed part
     completion_sqerr = (complete_images.long() - images.long()) ** 2.0
     completion_mse = 2.0 * torch.mean(completion_sqerr).item()
-    print('Completion MSE: {}'.format(round(completion_mse, 1)))
+    print('Completion MSE: {:.2f}'.format(completion_mse))
 
     # Save the image completions
     nrow = 10
@@ -90,7 +90,11 @@ if __name__ == '__main__':
     images = images.reshape(2, -1, nrow, *in_shape)
     images = images.permute(1, 0, 2, 3, 4, 5)
     images = images.reshape(len(data_test) * 2, *in_shape)
-    utils.save_image(images / 255.0, 'dgcspn-olivetti-completions.png', nrow=nrow, padding=0)
+    samples_filename = 'dgcspn-olivetti-completions.png'
+    print("Plotting generated samples to {} ...".format(samples_filename))
+    utils.save_image(images / 255.0, samples_filename, nrow=nrow, padding=0)
 
     # Save the model to file
-    torch.save(dgcspn.state_dict(), 'dgcspn-olivetti.pt')
+    model_filename = 'dgcspn-olivetti.pt'
+    print("Saving model's definition and parameters to {}".format(model_filename))
+    torch.save(dgcspn.state_dict(), model_filename)
