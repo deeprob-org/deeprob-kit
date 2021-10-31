@@ -1,15 +1,13 @@
 import abc
-import torch
-import torch.nn as nn
-import torch.distributions as distributions
-
 from typing import Optional, Union
+
+import torch
+from torch import nn
+from torch import distributions
 
 
 class ProbabilisticModel(abc.ABC, nn.Module):
     """Abstract Probabilistic Model base class."""
-    def __init__(self):
-        super(ProbabilisticModel, self).__init__()    
 
     def log_prob(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -30,7 +28,6 @@ class ProbabilisticModel(abc.ABC, nn.Module):
         :param y: The samples labels. It can be None.
         :return: The samples.
         """
-        pass
 
     @abc.abstractmethod
     def loss(self, x: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
@@ -41,13 +38,11 @@ class ProbabilisticModel(abc.ABC, nn.Module):
         :param y: The ground-truth. It can be None.
         :return: The loss.
         """
-        pass
 
     def apply_constraints(self):
         """
         Apply the constraints specified by the model.
         """
-        pass
 
 
 #: A density estimator is either a DeeProb-kit probabilistic model or a Torch distribution.

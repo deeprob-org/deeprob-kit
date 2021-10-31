@@ -1,8 +1,8 @@
+from typing import Tuple
+
 import numpy as np
 import torch
-import torch.nn as nn
-
-from typing import Tuple
+from torch import nn
 
 from deeprob.torch.utils import ScaledTanh
 from deeprob.flows.utils import squeeze_depth2d, unsqueeze_depth2d, Bijector, BatchNormLayer2d
@@ -28,7 +28,7 @@ class CouplingLayer1d(Bijector):
         :param affine: Whether to use affine transformation. If False then use only translation (as in NICE).
         :param reverse: Whether to reverse the mask used in the coupling layer. Useful for alternating masks.
         """
-        super(CouplingLayer1d, self).__init__(in_features)
+        super().__init__(in_features)
         self.affine = affine
         self.reverse = reverse
 
@@ -125,7 +125,7 @@ class CouplingLayer2d(Bijector):
                             Defaults to False, i.e. checkerboard coupling mask.
         :param reverse: Whether to reverse the mask used in the coupling layer. Useful for alternating masks.
         """
-        super(CouplingLayer2d, self).__init__(in_features)
+        super().__init__(in_features)
         self.affine = affine
         self.channelwise = channelwise
         self.reverse = reverse
@@ -291,7 +291,7 @@ class CouplingBlock2d(Bijector):
         :param affine: Whether to use affine transformation. If False then use only translation (as in NICE).
         :param last_block: Whether it is the last block (i.e. no channelwise-masked couplings) or not.
         """
-        super(CouplingBlock2d, self).__init__(in_features)
+        super().__init__(in_features)
         self.last_block = last_block
 
         # Build the input couplings (consisting of 3 checkerboard-masked couplings)
@@ -383,24 +383,24 @@ class CouplingBlock2d(Bijector):
 
         return x, inv_log_det_jacobian
 
-    def apply_forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def apply_forward(self, u: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         log_det_jacobian = 0.0
 
         if not self.last_block:
             # Squeeze the inputs
-            x = squeeze_depth2d(x)
+            u = squeeze_depth2d(u)
 
             # Pass through the channel-wise-masked couplings
             for layer in reversed(self.out_couplings):
-                x, ldj = layer.apply_forward(x)
+                u, ldj = layer.apply_forward(u)
                 log_det_jacobian += ldj
 
             # Un-squeeze the inputs
-            x = unsqueeze_depth2d(x)
+            u = unsqueeze_depth2d(u)
 
         # Pass through the checkerboard-masked couplings
         for layer in reversed(self.in_couplings):
-            x, ldj = layer.apply_forward(x)
+            u, ldj = layer.apply_forward(u)
             log_det_jacobian += ldj
 
-        return x, log_det_jacobian
+        return u, log_det_jacobian

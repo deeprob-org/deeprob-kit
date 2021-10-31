@@ -1,9 +1,9 @@
 import abc
-import numpy as np
-
 from typing import Optional, Union, Tuple, List, Type
 
-from scipy import stats as stats
+import numpy as np
+from scipy import stats
+
 from deeprob.context import is_check_dtype_enabled
 
 
@@ -16,7 +16,6 @@ class DataTransform(abc.ABC):
 
         :param data: The data for fitting.
         """
-        pass
 
     @abc.abstractmethod
     def forward(self, data: np.ndarray) -> np.ndarray:
@@ -26,7 +25,6 @@ class DataTransform(abc.ABC):
         :param data: The data to transform.
         :return: The transformed data.
         """
-        pass
 
     @abc.abstractmethod
     def backward(self, data: np.ndarray) -> np.ndarray:
@@ -36,7 +34,6 @@ class DataTransform(abc.ABC):
         :param data: The data to transform.
         :return: The transformed data.
         """
-        pass
 
 
 class DataFlatten(DataTransform):
@@ -160,7 +157,7 @@ def mixed_ohe_data(data: np.ndarray, domains: List[Union[list, tuple]]) -> np.nd
     :return: The One Hot encoded data.
     :raises ValueError: If there are inconsistencies between the data and domains.
     """
-    n_samples, n_features = data.shape
+    _, n_features = data.shape
     if len(domains) != n_features:
         raise ValueError("Each data column should correspond to a random variable having a domain")
 
@@ -197,8 +194,8 @@ def check_data_dtype(data: np.ndarray, dtype: Type[np.dtype] = np.float32):
         return data
 
     # Get flags for floating point data and type
-    is_data_fp = (data.dtype == np.float32) or (data.dtype == np.float64)
-    is_dtype_fp = (dtype == np.float32) or (dtype == np.float64)
+    is_data_fp = data.dtype in [np.float32, np.float64]
+    is_dtype_fp = dtype in [np.float32, np.float64]
 
     if is_dtype_fp:
         if not is_data_fp or data.dtype.itemsize < np.dtype(dtype).itemsize:

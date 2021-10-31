@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Union, Type, Tuple, List, Callable, Any
+
+import numpy as np
 
 from deeprob.spn.structure.leaf import Leaf
 from deeprob.spn.learning.splitting.gvs import gvs_cols, rgvs_cols, wrgvs_cols
@@ -55,21 +55,20 @@ def get_split_cols_method(split_cols: str) -> SplitColsFunc:
     """
     if split_cols == 'gvs':
         return gvs_cols
-    elif split_cols == 'rgvs':
+    if split_cols == 'rgvs':
         return rgvs_cols
-    elif split_cols == 'wrgvs':
+    if split_cols == 'wrgvs':
         return wrgvs_cols
-    elif split_cols == 'ebvs':
+    if split_cols == 'ebvs':
         return entropy_cols
-    elif split_cols == 'ebvs_ae':
+    if split_cols == 'ebvs_ae':
         return entropy_adaptive_cols
-    elif split_cols == 'gbvs':
+    if split_cols == 'gbvs':
         return gini_cols
-    elif split_cols == 'gbvs_ag':
+    if split_cols == 'gbvs_ag':
         return gini_adaptive_cols
-    elif split_cols == 'rdc':
+    if split_cols == 'rdc':
         return rdc_cols
-    elif split_cols == 'random':
+    if split_cols == 'random':
         return random_cols
-    else:
-        raise ValueError("Unknown split rows method called {}".format(split_cols))
+    raise ValueError("Unknown split rows method called {}".format(split_cols))

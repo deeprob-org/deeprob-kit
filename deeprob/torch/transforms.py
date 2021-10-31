@@ -1,8 +1,8 @@
+from typing import Union, Optional, List, Tuple
+
 import abc
 import torch
 import torchvision.transforms.functional as F
-
-from typing import Union, Optional, List, Tuple
 
 
 class Transform(abc.ABC):
@@ -25,7 +25,6 @@ class Transform(abc.ABC):
         :param x: The inputs.
         :return: The outputs.
         """
-        pass
 
     @abc.abstractmethod
     def backward(self, x: torch.Tensor) -> torch.Tensor:
@@ -35,7 +34,6 @@ class Transform(abc.ABC):
         :param x: The inputs.
         :return: The outputs.
         """
-        pass
 
 
 class TransformList(Transform, list):

@@ -1,11 +1,10 @@
 from __future__ import annotations
+from typing import Optional, Union, List
 
 import numpy as np
 import scipy.stats as ss
-
-from typing import Optional, Union, List
-
 from scipy.special import logsumexp
+
 from deeprob.utils.random import RandomState, check_random_state
 from deeprob.utils.graph import build_tree_structure, compute_bfs_ordering, maximum_spanning_tree
 from deeprob.utils.statistics import compute_mutual_information, estimate_priors_joints
@@ -35,7 +34,7 @@ class BinaryCLT(Leaf):
         :raises ValueError: If the tree structure is not compatible with the number of variables and root node.
         :raises ValueError: If the CPTs parameters are invalid.
         """
-        super(BinaryCLT, self).__init__(scope)
+        super().__init__(scope)
 
         if tree is not None:
             if isinstance(tree, list):
@@ -66,8 +65,7 @@ class BinaryCLT(Leaf):
             if root is not None:
                 if root not in self.scope:
                     raise ValueError("The root variable must be in scope")
-                else:
-                    root = self.scope.index(root)
+                root = self.scope.index(root)
         self.root = root
         self.tree = tree
         self.bfs = bfs
@@ -176,7 +174,7 @@ class BinaryCLT(Leaf):
         _, n_features = data.shape
         if len(domain) != n_features:
             raise ValueError("Each data column should correspond to a random variable having a domain")
-        if not all([d == [0, 1] for d in domain]):
+        if not all(d == [0, 1] for d in domain):
             raise ValueError("The domains must be binary for a Binary CLT distribution")
         if alpha < 0.0:
             raise ValueError("The Laplace smoothing factor must be non-negative")

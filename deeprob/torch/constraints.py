@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 class ScaleClipper(nn.Module):
@@ -12,10 +12,10 @@ class ScaleClipper(nn.Module):
         """
         if eps <= 0.0:
             raise ValueError("The epsilon value must be positive")
-        super(ScaleClipper, self).__init__()
+        super().__init__()
         self.register_buffer('eps', torch.tensor(eps))
 
-    def __call__(self, module: nn.Module):
+    def forward(self, module: nn.Module):
         """
         Call the constraint.
 

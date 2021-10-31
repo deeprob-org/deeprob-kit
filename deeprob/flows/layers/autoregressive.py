@@ -1,8 +1,8 @@
+from typing import Optional, Tuple, List
+
 import numpy as np
 import torch
-import torch.nn as nn
-
-from typing import Optional, Tuple, List
+from torch import nn
 
 from deeprob.flows.utils import Bijector
 from deeprob.torch.utils import ScaledTanh, MaskedLinear, get_activation_class
@@ -39,7 +39,7 @@ class AutoregressiveLayer(Bijector):
             raise ValueError("A Numpy RandomState is required if sequential is False")
         activation_cls = get_activation_class(activation)
 
-        super(AutoregressiveLayer, self).__init__(in_features)
+        super().__init__(in_features)
         self.layers = nn.ModuleList()
         self.scale_act = ScaledTanh()
 

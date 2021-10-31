@@ -1,10 +1,8 @@
 from __future__ import annotations
+from typing import Optional, Union, List, Tuple
+from collections import deque
 
 import numpy as np
-
-from typing import Optional, Union, List, Tuple
-
-from collections import deque
 from scipy import sparse as sp
 
 
@@ -54,7 +52,7 @@ class TreeNode:
         """
         if self.__parent is None and parent is not None:
             self.__parent = parent
-            self.__parent.__children.append(self)
+            self.__parent.get_children().append(self)
 
     def is_leaf(self) -> bool:
         """
@@ -74,7 +72,7 @@ class TreeNode:
         queue = [self]
         while queue:
             current_node = queue.pop(0)
-            queue.extend(current_node.__children)
+            queue.extend(current_node.get_children())
             n_nodes += 1
         return n_nodes
 
@@ -91,9 +89,9 @@ class TreeNode:
         queue = [self]
         while queue:
             current_node = queue.pop(0)
-            queue.extend(current_node.__children)
+            queue.extend(current_node.get_children())
             scope.append(current_node.id)
-            tree.append(current_node.__parent.id if current_node.__parent is not None else -1)
+            tree.append(current_node.get_parent().id if current_node.get_parent() is not None else -1)
         tree[scope.index(self.id)] = -1
         tree = [scope.index(t) if t != -1 else -1 for t in tree]
         return tree, scope

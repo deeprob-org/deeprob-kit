@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Optional, Union, Type, List, Callable, Any
+
+import numpy as np
 
 from deeprob.utils.random import RandomState
 from deeprob.spn.structure.node import Node, Product
@@ -28,12 +28,11 @@ def get_learn_leaf_method(learn_leaf: str) -> LearnLeafFunc:
     """
     if learn_leaf == 'mle':
         return learn_mle
-    elif learn_leaf == 'isotonic':
+    if learn_leaf == 'isotonic':
         return learn_isotonic
-    elif learn_leaf == 'binary-clt':
+    if learn_leaf == 'binary-clt':
         return learn_binary_clt
-    else:
-        raise ValueError("Unknown learn leaf method called {}".format(learn_leaf))
+    raise ValueError("Unknown learn leaf method called {}".format(learn_leaf))
 
 
 def learn_mle(
@@ -57,7 +56,6 @@ def learn_mle(
     :return: A leaf distribution.
     :raises ValueError: If there are inconsistencies between the data, distributions and domains.
     """
-    _, n_features = data.shape
     if len(scope) != len(distributions) or len(domains) != len(distributions):
         raise ValueError("Each data column should correspond to a random variable having a distribution and a domain")
 
@@ -94,7 +92,6 @@ def learn_isotonic(
     :return: A leaf distribution.
     :raises ValueError: If there are inconsistencies between the data, distributions and domains.
     """
-    _, n_features = data.shape
     if len(scope) != len(distributions) or len(domains) != len(distributions):
         raise ValueError("Each data column should correspond to a random variable having a distribution and a domain")
 
@@ -134,10 +131,9 @@ def learn_binary_clt(
     :raises ValueError: If there are inconsistencies between the data, distributions and domains.
     :raises ValueError: If the data doesn't follow a Bernoulli distribution.
     """
-    _, n_features = data.shape
     if len(scope) != len(distributions) or len(domains) != len(distributions):
         raise ValueError("Each data column should correspond to a random variable having a distribution and a domain")
-    if any([d != Bernoulli for d in distributions]):
+    if any(d != Bernoulli for d in distributions):
         raise ValueError("Binary Chow-Liu trees are only available for Bernoulli data")
 
     # If univariate, learn using MLE instead
@@ -177,7 +173,6 @@ def learn_naive_factorization(
     :return: A naive factorized model.
     :raises ValueError: If there are inconsistencies between the data, distributions and domains.
     """
-    _, n_features = data.shape
     if len(scope) != len(distributions) or len(domains) != len(distributions):
         raise ValueError("Each data column should correspond to a random variable having a distribution and a domain")
 

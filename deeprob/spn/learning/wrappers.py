@@ -1,7 +1,6 @@
-import numpy as np
-
 from typing import Optional, Union, Type, List
 
+import numpy as np
 from tqdm import tqdm
 
 from deeprob.spn.structure.leaf import LeafType, Leaf
@@ -59,7 +58,7 @@ def learn_classifier(
     if domains is None:
         domains = compute_data_domains(data, distributions)
 
-    n_samples, n_features = data.shape
+    n_samples, _ = data.shape
     classes = data[:, class_idx]
 
     # Initialize the tqdm wrapped unique classes array, if verbose is enabled

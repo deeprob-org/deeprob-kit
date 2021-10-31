@@ -46,7 +46,7 @@ class MAF(NormalizingFlow):
         if units <= 0:
             raise ValueError("The number of hidden units per layer must be positive")
 
-        super(MAF, self).__init__(in_features, dequantize=dequantize, logit=logit, in_base=in_base)
+        super().__init__(in_features, dequantize=dequantize, logit=logit, in_base=in_base)
         self.n_flows = n_flows
         self.depth = depth
         self.units = units

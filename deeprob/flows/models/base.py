@@ -1,8 +1,8 @@
-import torch
-import torch.nn as nn
-import torch.distributions as distributions
-
 from typing import Optional, Tuple
+
+import torch
+from torch import nn
+from torch import distributions
 
 from deeprob.torch.base import ProbabilisticModel, DensityEstimator
 from deeprob.flows.utils import DequantizeLayer, LogitLayer
@@ -30,7 +30,7 @@ class NormalizingFlow(ProbabilisticModel):
             if not isinstance(in_features, tuple) or len(in_features) != 3:
                 raise ValueError("The number of input features must be either an int or a (C, H, W) tuple")
 
-        super(NormalizingFlow, self).__init__()
+        super().__init__()
         self.in_features = in_features
 
         # Build the dequantization layer

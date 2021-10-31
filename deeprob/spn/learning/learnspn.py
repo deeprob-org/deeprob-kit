@@ -1,10 +1,10 @@
-import numpy as np
-
 from enum import Enum
 from collections import deque
 from typing import Optional, Union, Type, List, NamedTuple
 
+import numpy as np
 from tqdm import tqdm
+
 from deeprob.utils.random import RandomState, check_random_state
 from deeprob.spn.structure.leaf import Leaf
 from deeprob.spn.structure.node import Node, Sum, Product, assign_ids
@@ -17,10 +17,10 @@ class OperationKind(Enum):
     """
     Operation kind used by LearnSPN algorithm.
     """
-    REM_FEATURES = 1,
-    CREATE_LEAF = 2,
-    SPLIT_NAIVE = 3,
-    SPLIT_ROWS = 4,
+    REM_FEATURES = 1
+    CREATE_LEAF = 2
+    SPLIT_NAIVE = 3
+    SPLIT_ROWS = 4
     SPLIT_COLS = 5
 
 

@@ -1,6 +1,6 @@
-import numpy as np
-
 from typing import Union, Type, List
+
+import numpy as np
 
 from deeprob.spn.structure.leaf import Leaf
 

@@ -1,9 +1,9 @@
 import abc
-import numpy as np
-import scipy.stats as ss
-
 from enum import Enum
 from typing import Optional, Union, List
+
+import numpy as np
+import scipy.stats as ss
 
 from deeprob.utils.data import check_data_dtype
 from deeprob.spn.structure.node import Node
@@ -21,14 +21,14 @@ class LeafType(Enum):
 class Leaf(Node):
     LEAF_TYPE = None
 
-    def __init__(self, scope: Union[int, List[int]], **kwargs):
+    def __init__(self, scope: Union[int, List[int]]):
         """
         Initialize a leaf node given its scope.
 
         :param scope: The scope of the leaf.
         :param kwargs: Additional arguments.
         """
-        super(Leaf, self).__init__([scope] if isinstance(scope, int) else scope)
+        super().__init__([scope] if isinstance(scope, int) else scope)
 
     @abc.abstractmethod
     def em_init(self, random_state: np.random.RandomState):
@@ -37,7 +37,6 @@ class Leaf(Node):
 
         :param random_state: The random state.
         """
-        pass
 
     @abc.abstractmethod
     def em_step(self, stats: np.ndarray, data: np.ndarray, step_size: float):
@@ -48,7 +47,6 @@ class Leaf(Node):
         :param data: The data regarding random variables of the leaf.
         :param step_size: The step size of update.
         """
-        pass
 
     @abc.abstractmethod
     def fit(self, data: np.ndarray, domain: Union[list, tuple], **kwargs):
@@ -60,7 +58,6 @@ class Leaf(Node):
         :param kwargs: Optional parameters.
         :raises ValueError: If a parameter is out of domain.
         """
-        pass
 
     @abc.abstractmethod
     def likelihood(self, x: np.ndarray) -> np.ndarray:
@@ -70,7 +67,6 @@ class Leaf(Node):
         :param x: The inputs.
         :return: The resulting likelihoods.
         """
-        pass
 
     @abc.abstractmethod
     def log_likelihood(self, x: np.ndarray) -> np.ndarray:
@@ -80,7 +76,6 @@ class Leaf(Node):
         :param x: The inputs.
         :return: The resulting log-likelihoods.
         """
-        pass
 
     @abc.abstractmethod
     def mpe(self, x: np.ndarray) -> np.ndarray:
@@ -90,7 +85,6 @@ class Leaf(Node):
         :param x: The inputs.
         :return: The distribution's maximum at posteriori values.
         """
-        pass
 
     @abc.abstractmethod
     def sample(self, x: np.ndarray) -> np.ndarray:
@@ -100,7 +94,6 @@ class Leaf(Node):
         :param x: The samples with possible NaN values.
         :return: The completed samples.
         """
-        pass
 
     @abc.abstractmethod
     def moment(self, k: int = 1) -> float:
@@ -110,7 +103,6 @@ class Leaf(Node):
         :param k: The order of the moment.
         :return: The moment of order k.
         """
-        pass
 
     @abc.abstractmethod
     def params_count(self) -> int:
@@ -119,7 +111,6 @@ class Leaf(Node):
 
         :return: The number of parameters.
         """
-        pass
 
     @abc.abstractmethod
     def params_dict(self) -> dict:
@@ -128,7 +119,6 @@ class Leaf(Node):
 
         :return: A dictionary containing the distribution parameters.
         """
-        pass
 
 
 class Bernoulli(Leaf):
@@ -142,7 +132,7 @@ class Bernoulli(Leaf):
         :param p: The Bernoulli probability.
         :raises ValueError: If a parameter is out of domain.
         """
-        super(Bernoulli, self).__init__(scope)
+        super().__init__(scope)
         if p < 0.0 or p > 1.0:
             raise ValueError("The Bernoulli probability must be in [0, 1]")
 
@@ -231,7 +221,7 @@ class Categorical(Leaf):
         :param categories: The possible categories.
         :param probabilities: The probabilities associated to each category.
         """
-        super(Categorical, self).__init__(scope)
+        super().__init__(scope)
         self.categories = None
         self.probabilities = None
         self.distribution = None
@@ -353,7 +343,7 @@ class Isotonic(Leaf):
         :param breaks: The breaks values, such that len(breaks) == len(densities) + 1.
         :raises ValueError: If a parameter is out of domain.
         """
-        super(Isotonic, self).__init__(scope)
+        super().__init__(scope)
         self.densities = None
         self.breaks = None
         self.distribution = None
@@ -400,10 +390,10 @@ class Isotonic(Leaf):
         self.distribution = ss.rv_histogram(histogram=(densities, breaks))
 
     def em_init(self, random_state: np.random.RandomState):
-        raise NotImplemented("EM parameters initialization not yet implemented for Isotonic distributions")
+        raise NotImplementedError("EM parameters initialization not yet implemented for Isotonic distributions")
 
     def em_step(self, stats: np.ndarray, data: np.ndarray, step_size: float):
-        raise NotImplemented("EM step not yet implemented for Isotonic distributions")
+        raise NotImplementedError("EM step not yet implemented for Isotonic distributions")
 
     def likelihood(self, x: np.ndarray) -> np.ndarray:
         ls = np.ones([len(x), 1], dtype=np.float32)
@@ -457,7 +447,7 @@ class Uniform(Leaf):
         :param start: The start of the uniform distribution.
         :param width: The width of the uniform distribution.
         """
-        super(Uniform, self).__init__(scope)
+        super().__init__(scope)
         self.start = start
         self.width = width
 
@@ -469,10 +459,10 @@ class Uniform(Leaf):
         self.start, self.width = ss.uniform.fit(data)
 
     def em_init(self, random_state: np.random.RandomState):
-        raise NotImplemented("EM parameters initialization not yet implemented for Uniform distributions")
+        raise NotImplementedError("EM parameters initialization not yet implemented for Uniform distributions")
 
     def em_step(self, stats: np.ndarray, data: np.ndarray, step_size: float):
-        raise NotImplemented("EM step not yet implemented for Uniform distributions")
+        raise NotImplementedError("EM step not yet implemented for Uniform distributions")
 
     def likelihood(self, x: np.ndarray) -> np.ndarray:
         ls = np.ones([len(x), 1], dtype=np.float32)
@@ -523,7 +513,7 @@ class Gaussian(Leaf):
         :param stddev: The standard deviation parameter.
         :raises ValueError: If a parameter is out of domain.
         """
-        super(Gaussian, self).__init__(scope)
+        super().__init__(scope)
         if stddev <= 1e-5:
             raise ValueError("The standard deviation of a Gaussian must be greater than 1e-5")
 

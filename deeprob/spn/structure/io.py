@@ -1,11 +1,10 @@
 import os
 import json
+from typing import Optional, Union, Type, List, Dict, IO
+
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-
-from typing import Optional, Union, Type, List, Dict, IO
-
 from networkx.drawing import nx_pydot
 from networkx.drawing.layout import rescale_layout_dict
 from networkx.algorithms.tree import is_arborescence
@@ -30,7 +29,7 @@ def save_digraph_json(graph: nx.DiGraph, f: Union[IO, os.PathLike, str]):
 
     # Save the object
     if isinstance(f, (os.PathLike, str)):
-        with open(f, 'w') as file:
+        with open(f, 'w', encoding='utf-8') as file:
             file.write(json_obj)
     else:
         f.write(json_obj)
@@ -45,7 +44,7 @@ def load_digraph_json(f: Union[IO, os.PathLike, str]) -> nx.DiGraph:
     """
     # Load the object
     if isinstance(f, (os.PathLike, str)):
-        with open(f, 'r') as file:
+        with open(f, 'r', encoding='utf-8') as file:
             json_obj = json.load(file)
     else:
         json_obj = json.load(f)
@@ -154,7 +153,7 @@ def spn_to_digraph(root: Node) -> nx.DiGraph:
             params = node.params_dict()
             for name, value in params.items():
                 if isinstance(value, np.ndarray):  # Convert Numpy arrays into lists
-                    if value.dtype == np.float32 or value.dtype == np.float64:
+                    if value.dtype in [np.float32, np.float64]:
                         value = value.astype(np.float64)
                         params[name] = np.around(value, 8).tolist()
                     else:
@@ -238,9 +237,9 @@ def binary_clt_to_digraph(clt: BinaryCLT) -> nx.DiGraph:
         graph.add_node(int(node_id), **attr)
 
     # Add edges to the graph
-    for node_id in range(len(clt.tree)):
-        if clt.tree[node_id] != -1:
-            graph.add_edge(int(clt.tree[node_id]), node_id)
+    for node_id, parent_node_id in enumerate(clt.tree):
+        if parent_node_id != -1:
+            graph.add_edge(int(parent_node_id), node_id)
 
     return graph
 
@@ -376,8 +375,8 @@ def plot_binary_clt(clt: BinaryCLT, f: Union[IO, os.PathLike, str], show_weights
             weight = attr['weight']
             for child_id, _ in graph.in_edges(node_id):
                 cpt = np.around(np.exp(weight), 2)
-                label = "$P(X_{{{}}}|0)$ {:.2f} {:.2f}\n$P(X_{{{}}}|1)$ {:.2f} {:.2f}".format(
-                    scope, cpt[0, 0], cpt[0, 1], scope, cpt[1, 0], cpt[1, 1]
+                label = "$P(X_{{{sc}}}|0)$ {:.2f} {:.2f}\n$P(X_{{{sc}}}|1)$ {:.2f} {:.2f}".format(
+                    cpt[0, 0], cpt[0, 1], cpt[1, 0], cpt[1, 1], sc=scope
                 )
                 graph.edges[child_id, node_id]['weight'] = label
 
