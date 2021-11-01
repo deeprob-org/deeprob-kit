@@ -30,8 +30,8 @@ if __name__ == '__main__':
         help="The splitting rows method."
     )
     parser.add_argument(
-        '--split-cols', choices=['gvs', 'rgvs', 'wrgvs', 'ebvs', 'ebvs_ae', 'gbvs', 'gbvs_ag', 'rdc', 'random'], default='gvs',
-        help="The splitting columns method."
+        '--split-cols', choices=['gvs', 'rgvs', 'wrgvs', 'ebvs', 'ebvs_ae', 'gbvs', 'gbvs_ag', 'rdc', 'random'],
+        default='gvs', help="The splitting columns method."
     )
     parser.add_argument(
         '--min-rows-slice', type=int, default=256, help="The minimum number of rows for splitting."
@@ -49,7 +49,8 @@ if __name__ == '__main__':
         '--rdc-threshold', type=float, default=0.3, help="The threshold for the RDC independence test."
     )
     parser.add_argument(
-        '--ebvs-threshold', type=float, default=0.3, help='The threshold for the Entropy/Gini column splitting')
+        '--ebvs-threshold', type=float, default=0.3, help='The threshold for the Entropy/Gini column splitting'
+    )
     parser.add_argument(
         '--smoothing', type=float, default=0.1, help="The Laplace smoothing value."
     )
@@ -86,7 +87,7 @@ if __name__ == '__main__':
         domains = None  # Automatically detect domains for continuous data
 
     # Create the results directory
-    identifier = time.strftime("%Y%m%d-%H%M")
+    identifier = time.strftime("%Y%m%d-%H%M%S")
     directory = os.path.join('spn', args.dataset, identifier)
     os.makedirs(directory, exist_ok=True)
     results_filepath = os.path.join(directory, 'results.json')
@@ -113,7 +114,7 @@ if __name__ == '__main__':
     elif args.split_cols in ['ebvs_ae', 'gbvs_ag']:
         split_cols_kwargs['alpha'] = args.smoothing
         split_cols_kwargs['e'] = args.ebvs_threshold
-        split_cols_kwargs['size'] = data_train.shape[0]
+        split_cols_kwargs['size'] = len(data_train)
 
     # Learn a SPN density estimator
     start_time = time.perf_counter()

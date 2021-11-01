@@ -15,7 +15,7 @@ def gini_cols(
     alpha: float = 0.1
 ) -> np.ndarray:
     """
-    Compute Gini's index based splitting.
+    Gini index column splitting method.
 
     :param data: The data.
     :param distributions: Distributions of the features.
@@ -25,18 +25,24 @@ def gini_cols(
     :return: A partitioning of features.
     """
     _, n_features = data.shape
-    partition = np.zeros(n_features, dtype=int)
+    partition = np.zeros(n_features, dtype=np.int64)
 
-    # Compute entropy for each variable
+    # Compute Gini index for each variable
     for i in range(n_features):
-        if distributions[i].LEAF_TYPE == LeafType.DISCRETE:  # discrete
-            gini = compute_gini(data[:, i], domains[i], 'discrete', alpha)
-        elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS:  # continuous
-            gini = compute_gini(data[:, i], domains[i], 'continuous', alpha)
+        if distributions[i].LEAF_TYPE == LeafType.DISCRETE:
+            bins = domains[i] + [len(domains[i])]
+            hist, _ = np.histogram(data[:, i], bins=bins)
+            probs = (hist + alpha) / (len(data) + len(hist) * alpha)
+        elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS:
+            hist, _ = np.histogram(data[:, i], bins='scott')
+            probs = (hist + alpha) / (len(data) + len(hist) * alpha)
         else:
-            raise ValueError('Leaves distributions must be either discrete or continuous')
+            raise ValueError("Leaves distributions must be either discrete or continuous")
 
-        # Add to cluster if entropy less than threshold
+        # Compute the Gini index
+        gini = compute_gini(probs)
+
+        # Add to cluster if the Gini index is less than the threshold
         if gini < e:
             partition[i] = 1
 
@@ -53,7 +59,7 @@ def gini_adaptive_cols(
     size: int = None
 ) -> np.ndarray:
     """
-    Compute Adaptive Gini's index based splitting.
+    Adaptive Gini index column splitting method.
 
     :param data: The data.
     :param distributions: Distributions of the features.
@@ -65,25 +71,10 @@ def gini_adaptive_cols(
     :raises ValueError: If the size of the data is missing.
     """
     if size is None:
-        raise ValueError("Missing size input for entropy adaptive computation")
+        raise ValueError("Missing data size for Adaptive Gini column splitting method")
 
-    _, n_features = data.shape
-    partition = np.zeros(n_features, dtype=int)
-
-    # compute entropy for each variable
-    for i in range(n_features):
-        if distributions[i].LEAF_TYPE == LeafType.DISCRETE:  # discrete
-            gini = compute_gini(data[:, i], domains[i], 'discrete', alpha)
-        elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS:  # continuous
-            gini = compute_gini(data[:, i], domains[i], 'continuous', alpha)
-        else:
-            raise ValueError('Leaves distributions must be either discrete or continuous')
-
-        # Adaptive gini
-        e = max(e * (data.shape[0] / size), 1e-07)
-
-        # add to cluster if gini is less than threshold
-        if gini < e:
-            partition[i] = 1
-
-    return partition
+    return gini_cols(
+        data, distributions, domains, random_state,
+        e=max(e * (len(data) / size), np.finfo(np.float32).eps),
+        alpha=alpha
+    )
