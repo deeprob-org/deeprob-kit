@@ -33,16 +33,19 @@ The supported data dimensionality for each model is showed in the *Input Dimensi
 Moreover, the *Supervised* column tells which model is suitable for a supervised learning task,
 other than density estimation task.
 
+Legend — D: one-dimensional size, C: channels, H: height, W: width.
+
 | Model      | Description                                        | Input Dimensionality | Supervised |
 |------------|----------------------------------------------------|:--------------------:|:----------:|
 | Binary-CLT | Binary Chow-Liu Tree (CLT)                         |           D          |      ❌     |
-| SPN        | Vanilla Sum-Product Network, using LearnSPN        |           D          |      ✔     |
-| XPC        | Random Probabilistic Circuits, using LearnXPC      |           D          |      ✔     |
+| SPN        | Vanilla Sum-Product Network                        |           D          |      ✔     |
+| MSPN       | Mixed Sum-Product Network                          |           D          |      ✔     |
+| XPC        | Random Probabilistic Circuit                       |           D          |      ✔     |
 | RAT-SPN    | Randomized and Tensorized Sum-Product Network      |           D          |      ✔     |
-| DGC-SPN    | Deep Generalized Convolutional Sum-Product Network | (1, D, D); (3, D, D) |      ✔     |
+| DGC-SPN    | Deep Generalized Convolutional Sum-Product Network |       (C, D, D)      |      ✔     |
 | MAF        | Masked Autoregressive Flow                         |           D          |      ❌     |
-| NICE       | Non-linear Independent Components Estimation Flow  | (1, H, W); (3, H, W) |      ❌     |
-| RealNVP    | Real-valued Non-Volume-Preserving Flow             | (1, H, W); (3, H, W) |      ❌     |
+| NICE       | Non-linear Independent Components Estimation Flow  |       (C, H, W)      |      ❌     |
+| RealNVP    | Real-valued Non-Volume-Preserving Flow             |       (C, H, W)      |      ❌     |
 
 ## Installation
 
