@@ -1,0 +1,5 @@
+{
+  "dataset": "binarized_mnist",
+  "n_repetitions": 10,
+  "n_samples": 1000
+}
