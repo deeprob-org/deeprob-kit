@@ -63,7 +63,8 @@ def learn_spn(
     :param split_rows: The rows splitting method.
                        It can be either 'kmeans', 'gmm', 'rdc', 'random' or a custom SplitRowsFunc function.
     :param split_cols: The columns splitting method.
-                       It can be either 'gvs', 'rdc', 'random' or a custom SplitColsFunc function.
+                       It can be either 'gvs', 'rgvs', 'wrgvs', 'ebvs', 'ebvs_ae', 'gbvs', 'gbvs_ag', 'rdc', 'random'
+                       or a custom SplitColsFunc function.
     :param learn_leaf_kwargs: The parameters of the learn leaf method.
     :param split_rows_kwargs: The parameters of the rows splitting method.
     :param split_cols_kwargs: The parameters of the cols splitting method.

@@ -4,6 +4,7 @@ import numpy as np
 from deeprob.utils.statistics import estimate_priors_joints
 from deeprob.utils.statistics import compute_mutual_information
 from deeprob.utils.statistics import compute_mean_quantiles
+from deeprob.utils.statistics import compute_gini
 
 
 class TestStatistics(unittest.TestCase):
@@ -58,6 +59,11 @@ class TestStatistics(unittest.TestCase):
         self.assertTrue(np.allclose(mean_quantiles, [[0.2, 0.0], [1.0, 0.4]]))
         self.assertRaises(ValueError, compute_mean_quantiles, self.data, 0)
         self.assertRaises(ValueError, compute_mean_quantiles, self.data, len(self.data) + 1)
+
+    def test_compute_gini(self):
+        g = 1.0 - (self.priors[0, 0] ** 2.0 + self.priors[0, 1] ** 2.0)
+        self.assertEqual(compute_gini(self.priors[0]), g)
+        self.assertRaises(ValueError, compute_gini, self.priors[:, 0])
 
 
 if __name__ == '__main__':
