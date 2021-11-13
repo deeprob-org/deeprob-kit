@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 
 from deeprob.spn.structure.leaf import Leaf
-from deeprob.spn.structure.node import Node, Sum, Product, topological_order, topological_order_layered
+from deeprob.spn.structure.node import Node, Sum, Product, topological_order_layered
 from deeprob.spn.utils.validity import check_spn
 
 
