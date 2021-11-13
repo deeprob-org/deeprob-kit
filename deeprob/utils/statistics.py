@@ -1,4 +1,4 @@
-from typing import Tuple, Union, List
+from typing import Tuple
 
 import numpy as np
 
@@ -106,70 +106,13 @@ def estimate_priors_joints(data: np.ndarray, alpha: float = 0.1) -> Tuple[np.nda
     return priors, joints
 
 
-def compute_entropy(
-    data: np.ndarray,
-    domains: List[Union[list, tuple]],
-    leaf_type: str,
-    alpha: float = 0.1
-) -> float:
+def compute_gini(probs: np.ndarray) -> float:
     """
-    Computes the entropy of a feature.
+    Computes the Gini index given some probabilities.
 
-    :param data: The data.
-    :param domains: Domain of the feature (numpy array).
-    :param leaf_type: Type of variable.
-    :param alpha: laplacian alpha to apply at frequence.
-    :return: Value of the entropy.
-    :raises ValueError: If the leaf distributions are NOT discrete or continuous.
+    :param probs: The probabilities.
+    :raises ValueError: If the probabilities doesn't sum up to one.
     """
-    if leaf_type == 'discrete':
-        one_counts = np.sum(data)
-        zero_counts = len(data) - one_counts
-        smoth_freq = np.array([one_counts, zero_counts]) + alpha
-        probs = smoth_freq / (data.shape[0] + (len(domains) * alpha))
-        log_probs = np.log2(probs)
-        ent = -(probs * log_probs).sum()
-    elif leaf_type == 'continuous':
-        bins = np.ceil(np.cbrt(data.shape[0])).astype(np.int)
-        hist, bin_edges = np.histogram(data, bins=bins)
-        smoth_freq = hist + alpha
-        probs = smoth_freq / (data.shape[0] + ((len(bin_edges) - 1) * alpha))
-        log_probs = np.log2(probs)
-        ent = -(probs * log_probs).sum() / np.log2(bins)
-    else:
-        raise ValueError('Leaf type distribution must be either discrete or continuous')
-
-    return max(min(ent, 1.0), 0.0)
-
-
-def compute_gini(
-    data: np.ndarray,
-    domains: List[Union[list, tuple]],
-    leaf_type: str,
-    alpha: float = 0.1
-) -> float:
-    """
-    Computes the Gini value of a feature.
-
-    :param data: The data.
-    :param domains: Domain of the feature (numpy array).
-    :param alpha: laplacian alpha to apply at frequence.
-    :return: Value of the Gini computation.
-    :raises ValueError: If the leaf distributions are NOT discrete or continuous.
-    """
-    if leaf_type == 'discrete': # discrete
-        one_counts = np.sum(data)
-        zero_counts = len(data) - one_counts
-        smoth_freq = np.array([one_counts, zero_counts]) + alpha
-        probs = smoth_freq / (data.shape[0] + (len(domains) * alpha))
-        gini = 1 - np.sum(probs**2)
-    elif leaf_type == 'continuous':
-        bins = np.ceil(np.cbrt(data.shape[0])).astype(np.int)
-        hist, bin_edges = np.histogram(data, bins=bins)
-        smoth_freq = hist + alpha
-        probs = smoth_freq / (data.shape[0] + ((len(bin_edges) - 1) * alpha))
-        gini = 1 - np.sum(probs**2)
-    else:
-        raise ValueError('Leaf type distribution must be either discrete or continuous')
-
-    return max(min(gini, 1.0), 0.0)
+    if not np.isclose(np.sum(probs), 1.0):
+        raise ValueError("Probabilities must sum up to one")
+    return 1.0 - np.sum(probs ** 2.0)

@@ -4,4 +4,4 @@ from .graph import TreeNode, build_tree_structure, compute_bfs_ordering, maximum
 from .random import RandomState, check_random_state
 from .region import RegionGraph
 from .statistics import compute_mean_quantiles, compute_mutual_information, estimate_priors_joints
-from .statistics import compute_entropy, compute_gini
+from .statistics import compute_gini
