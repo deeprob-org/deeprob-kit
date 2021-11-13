@@ -43,7 +43,7 @@ class EarlyStopping:
         """
         return self.__counter >= self.patience
 
-    def get_best_state(self) -> OrderedDict[str, torch.Tensor]:
+    def get_best_state(self) -> OrderedDict:
         """
         Get the best model's state dictionary.
         """
