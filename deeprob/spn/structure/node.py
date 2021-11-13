@@ -228,7 +228,7 @@ def topological_order(root: Node) -> Optional[List[Node]]:
     if num_outgoings[root] != 0:
         return None
 
-    # Initialize the queue by the nodes having no outgoing edges, i.e. the root node
+    # Non-layered topological ordering implementation
     queue = deque([root])
     while queue:
         node = queue.popleft()
@@ -237,6 +237,46 @@ def topological_order(root: Node) -> Optional[List[Node]]:
             num_outgoings[c] -= 1
             if num_outgoings[c] == 0:
                 queue.append(c)
+
+    # Check if a cycle has been found
+    if sum(num_outgoings.values()) != 0:
+        return None
+    return ordering
+
+
+def topological_order_layered(root: Node) -> Optional[List[List[Node]]]:
+    """
+    Compute the Topological Ordering Layered for a SPN, using the Kahn's Algorithm.
+
+    :param root: The root of the SPN.
+    :return: A list of layers that form a topological ordering.
+             If the SPN graph is not acyclic, it returns None.
+    """
+    ordering = list()
+    num_outgoings = defaultdict(int)
+    num_outgoings[root] = 0
+
+    # Initialize the number of outgoings edges for each node
+    for node in bfs(root):
+        for c in node.children:
+            num_outgoings[c] += 1
+
+    # Check the unusual case where the root node have outgoings edges, i.e. a trivial cycle has been found
+    if num_outgoings[root] != 0:
+        return None
+
+    # Layered topological ordering implementation
+    ordering.append([root])
+    while True:
+        layer = list()
+        for node in ordering[-1]:
+            for c in node.children:
+                num_outgoings[c] -= 1
+                if num_outgoings[c] == 0:
+                    layer.append(c)
+        if not layer:
+            break
+        ordering.append(layer)
 
     # Check if a cycle has been found
     if sum(num_outgoings.values()) != 0:

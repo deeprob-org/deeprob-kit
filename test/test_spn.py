@@ -8,7 +8,7 @@ from deeprob.spn.utils.statistics import compute_statistics
 from deeprob.spn.utils.filter import filter_nodes_by_type
 from deeprob.spn.utils.validity import check_spn
 from deeprob.spn.structure.node import Sum, Product
-from deeprob.spn.structure.node import bfs, dfs_post_order, topological_order
+from deeprob.spn.structure.node import bfs, dfs_post_order, topological_order, topological_order_layered
 from deeprob.spn.structure.leaf import Bernoulli, Gaussian
 from deeprob.spn.structure.io import save_spn_json, load_spn_json
 from deeprob.spn.learning.learnspn import learn_spn
@@ -196,6 +196,15 @@ class TestSPN(unittest.TestCase):
         spn = self.__build_cyclical_spn()
         ordering = topological_order(spn)
         self.assertIsNone(ordering)
+
+    def test_topological_order_layered(self):
+        spn = self.__build_dag_spn()
+        layers = topological_order_layered(spn)
+        node_layered_ids = list(map(lambda layer: list(map(lambda node: node.id, layer)), layers))
+        self.assertEqual(node_layered_ids, [[0], [1, 2, 3], [5, 6, 4, 7]])
+        spn = self.__build_cyclical_spn()
+        layers = topological_order_layered(spn)
+        self.assertIsNone(layers)
 
     def test_prune(self):
         spn = self.__learn_spn_unpruned()
