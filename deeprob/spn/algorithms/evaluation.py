@@ -45,8 +45,8 @@ def eval_bottom_up(
     if layers is None:
         raise ValueError("SPN structure is not a directed acyclic graph (DAG)")
 
-    n_nodes = len([_ for layer in layers for _ in layer])
-    ls = np.empty(shape=(n_nodes, len(x)), dtype=np.float32)
+    n_nodes, n_samples = sum(map(len, layers)), len(x)
+    ls = np.empty(shape=(n_nodes, n_samples), dtype=np.float32)
 
     def eval_forward(node):
         if isinstance(node, Leaf):
@@ -110,8 +110,8 @@ def eval_top_down(
         x = np.copy(x)
 
     # Build the array consisting of top-down path masks
-    n_nodes = len([_ for layer in layers for _ in layer])
-    masks = np.zeros(shape=(n_nodes, len(x)), dtype=np.bool_)
+    n_nodes, n_samples = sum(map(len, layers)), len(x)
+    masks = np.zeros(shape=(n_nodes, n_samples), dtype=np.bool_)
     masks[root.id] = True
 
     def eval_backward(node):
