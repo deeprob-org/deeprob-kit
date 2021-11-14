@@ -12,7 +12,6 @@ def moment(root: Node, order: int = 1) -> np.ndarray:
 
     :param root: The root of the SPN.
     :param order: The order of the moment. If scalar, it will be used for all the random variables.
-                  It can also be a sequence of moment orders, one for each random variable.
     :return: The non-central moments with respect to each variable in the scope.
     :raises ValueError: If the order of the moment is negative.
     """
