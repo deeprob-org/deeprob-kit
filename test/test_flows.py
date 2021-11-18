@@ -78,16 +78,16 @@ class TestFlows(unittest.TestCase):
         self.__assert_flow1d_inverse(realnvp)
 
     def test_realnvp2d(self):
-        realnvp = RealNVP2d(self.data_shape, n_flows=1, n_blocks=2, channels=8, network='resnet', affine=True).eval()
+        realnvp = RealNVP2d(self.data_shape, n_flows=2, n_blocks=2, channels=8, network='resnet', affine=True).eval()
         self.__assert_flow2d_inverse(realnvp)
-        realnvp = RealNVP2d(self.data_shape, n_flows=1, n_blocks=2, channels=8, network='resnet', affine=False).eval()
+        realnvp = RealNVP2d(self.data_shape, n_flows=2, n_blocks=2, channels=8, network='resnet', affine=False).eval()
         self.__assert_flow2d_inverse(realnvp)
-        realnvp = RealNVP2d(self.data_shape, n_flows=1, n_blocks=2, channels=8, network='densenet', affine=True).eval()
+        realnvp = RealNVP2d(self.data_shape, n_flows=2, n_blocks=2, channels=8, network='densenet', affine=True).eval()
         self.__assert_flow2d_inverse(realnvp)
-        realnvp = RealNVP2d(self.data_shape, n_flows=1, n_blocks=2, channels=8, network='densenet', affine=False).eval()
+        realnvp = RealNVP2d(self.data_shape, n_flows=2, n_blocks=2, channels=8, network='densenet', affine=False).eval()
         self.__assert_flow2d_inverse(realnvp)
         realnvp = RealNVP2d(
-            self.data_shape, n_flows=1, n_blocks=2, channels=8, network='resnet', affine=True,
+            self.data_shape, n_flows=2, n_blocks=2, channels=8, network='resnet', affine=True,
             dequantize=True, logit=0.01
         ).eval()
         self.__assert_flow2d_inverse(realnvp)
