@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 
-from experiments.datasets import load_binary_dataset
+from sklearn.datasets import load_diabetes
 from test.utils import *
 
 from deeprob.spn.utils.validity import is_structured_decomposable
@@ -17,11 +17,11 @@ class TestCLT(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         random_state = np.random.RandomState(42)
-        data, _, _ = load_binary_dataset('experiments/datasets', 'nltcs', raw=True)
-        data = data.astype(np.float32)
+        data, _, = load_diabetes(return_X_y=True)
+        data = (data < np.median(data, axis=0)).astype(np.float32)
         cls.root_id = 1
         cls.n_samples, cls.n_features = data.shape
-        cls.evi_data = resample_data(data, 5000, random_state)
+        cls.evi_data = resample_data(data, 1000, random_state)
         cls.mar_data = random_marginalize_data(cls.evi_data, 0.2, random_state)
 
         cls.complete_data = complete_binary_data(cls.n_features)
