@@ -203,7 +203,7 @@ class RealNVP2d(NormalizingFlow):
 
         # Collect the chunks in and upscale the results
         slices = []
-        for i in range(len(self.layers) - 2, -1, -1):
+        for i in range(len(self.layers) - 1):
             # Downscale the results and split them in half (i.e. multi-scale architecture)
             x = F.conv2d(x, self.perm_matrices[i], stride=2)
             x, z = torch.chunk(x, chunks=2, dim=1)
