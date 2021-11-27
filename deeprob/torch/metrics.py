@@ -110,7 +110,7 @@ def extract_features(
     **kwargs
 ) -> torch.Tensor:
     """
-    Extract the features produced by a model using a data loader.
+    Extract the features produced by a model using a data set.
 
     :param model: The model to use to extract the features.
     :param dataset: The data set.
