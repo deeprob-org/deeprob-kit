@@ -1,6 +1,7 @@
-from typing import Tuple
+from typing import Union, Tuple
 
 import numpy as np
+from scipy import linalg
 
 from deeprob.utils.data import check_data_dtype
 
@@ -111,8 +112,65 @@ def compute_gini(probs: np.ndarray) -> float:
     Computes the Gini index given some probabilities.
 
     :param probs: The probabilities.
+    :return: The Gini index.
     :raises ValueError: If the probabilities doesn't sum up to one.
     """
     if not np.isclose(np.sum(probs), 1.0):
         raise ValueError("Probabilities must sum up to one")
     return 1.0 - np.sum(probs ** 2.0)
+
+
+def compute_bpp(avg_ll: float, shape: Union[int, tuple, list]):
+    """
+    Compute the average number of bits per pixel (BPP).
+
+    :param avg_ll: The average log-likelihood, expressed in nats.
+    :param shape: The number of dimensions or, alternatively, a sequence of dimensions.
+    :return: The average number of bits per pixel.
+    """
+    return -avg_ll / (np.log(2.0) * np.prod(shape))
+
+
+def compute_fid(
+    mean1: np.ndarray,
+    cov1: np.ndarray,
+    mean2: np.ndarray,
+    cov2: np.ndarray,
+    blocksize: int = 64
+) -> float:
+    """
+    Computes the Frechet Inception Distance (FID) between two multivariate Gaussian distributions.
+    This implementation has been readapted from https://github.com/mseitzer/pytorch-fid.
+
+    :param mean1: The mean of the first multivariate Gaussian.
+    :param cov1: The covariance of the first multivariate Gaussian.
+    :param mean2: The mean of the second multivariate Gaussian.
+    :param cov2: The covariance of the second multivariate Gaussian.
+    :param blocksize: The block size used by the matrix square root algorithm.
+    :return: The FID score.
+    :raises ValueError: If there is a shape mismatch between input arrays.
+    """
+    if mean1.ndim != 1 or mean2.ndim != 1:
+        raise ValueError("Mean arrays must be one-dimensional")
+    if cov1.ndim != 2 or cov2.ndim != 2:
+        raise ValueError("Covariance arrays must be two-dimensional")
+    if mean1.shape != mean2.shape:
+        raise ValueError("Shape mismatch between mean arrays")
+    if cov1.shape != cov2.shape:
+        raise ValueError("Shape mismatch between covariance arrays")
+
+    # Compute the matrix square root of the dot product between covariance matrices
+    epsdiag = np.zeros_like(cov1)
+    np.fill_diagonal(epsdiag, np.finfo(np.float32).eps)
+    sqrtcov, _ = linalg.sqrtm(np.dot(cov1 + epsdiag, cov2 + epsdiag), disp=False, blocksize=blocksize)
+
+    # Numerical errors might give a complex output, even if the input arrays are real
+    if np.iscomplexobj(sqrtcov) and np.isrealobj(cov1) and np.isrealobj(cov2):
+        sqrtcov = sqrtcov.real
+
+    # Compute the dot product of the difference between mean arrays
+    diffm = mean1 - mean2
+    diffmdot = np.dot(diffm, diffm)
+
+    # Return the final FID score
+    return diffmdot + np.trace(cov1) + np.trace(cov2) - 2.0 * np.trace(sqrtcov)
