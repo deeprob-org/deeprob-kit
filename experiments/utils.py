@@ -149,7 +149,7 @@ def sample_fid_datasets(
     data_indices = random_state.choice(len(data_test), size=n_samples, replace=False)
     data_test = data.Subset(data_test, data_indices)
 
-    return samples, data_test
+    return data_test, samples
 
 
 def collect_image_completions(
