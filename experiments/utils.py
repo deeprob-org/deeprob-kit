@@ -123,7 +123,7 @@ def sample_fid_datasets(
     n_samples: int = 1000,
     batch_size: int = 100,
     random_state: RandomState = 42
-):
+) -> Tuple[data.Dataset, data.Dataset]:
     """
     Sample the data sets used to compute the FID score.
 
@@ -147,9 +147,8 @@ def sample_fid_datasets(
 
     # Generate a subset of the original test data set.
     data_indices = random_state.choice(len(data_test), size=n_samples, replace=False)
-    data_test = data.Subset(data_test, data_indices)
 
-    return data_test, samples
+    return data.Subset(data_test, data_indices), UnsupervisedDataset(samples, transform=data_test.transform)
 
 
 def collect_image_completions(
