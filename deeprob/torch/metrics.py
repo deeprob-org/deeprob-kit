@@ -1,10 +1,11 @@
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 import torch
+import torch.nn.functional as F
 from torch import nn
-from torch import hub
 from torch.utils import data
 from torchvision import transforms
+from torchvision import models
 
 from deeprob.utils.statistics import compute_fid
 
@@ -50,21 +51,22 @@ def fid_score(
     dataset1: Union[data.Dataset, torch.Tensor],
     dataset2: Union[data.Dataset, torch.Tensor],
     model: Optional[nn.Module] = None,
-    resizer: Optional[nn.Module] = None,
+    transform: Optional[Any] = None,
     batch_size: int = 128,
     num_workers: int = 0,
     device: Optional[torch.device] = None
 ) -> float:
     """
     Compute the Frechet Inception Distance (FID) between two data samples.
+    This implementation has been readapted from https://github.com/mseitzer/pytorch-fid.
+    IMPORTANT NOTE: The computed FID score is not comparable with other FID scores based on Tensorflow's InceptionV3.
 
     :param dataset1: The first samples data set.
     :param dataset2: The second samples data set.
     :param model: The model to use to extract the features.
                   If None the Torchvision's InceptionV3 model pretrained on ImageNet will be used.
-    :param resizer: The input images resizer. It can be None if no resizing must be applied.
-                    If resizer is None and model is also None, then the resizer is instantiated
-                    in order to resize to 3x299x299.
+    :param transform: An optional transformation to apply to every sample. If transform and model are both None,
+                      then the transformation resizes to 3x299x299 and normalizes values from (0, 1) to (-1, 1).
     :param batch_size: The batch size to use when extracting features.
     :param num_workers: The number of workers used for the data loaders.
     :param device: The device used to run the model. If it's None 'cuda' will be used, if available.
@@ -72,23 +74,26 @@ def fid_score(
     """
     if model is None:
         # Load the InceptionV3 model pretrained on ImageNet
-        model = hub.load('pytorch/vision:v0.10.0', 'inception_v3', pretrained=True)
+        model = models.inception_v3(pretrained=True, aux_logits=False)
 
-        # Remove dropout and fully-connected layers (we are interested in features)
+        # Remove dropout and fully-connected layers (we are interested in extracted features)
         model.dropout = nn.Identity()
         model.fc = nn.Identity()
 
-        # Set the resizer
-        if resizer is None:
-            resizer = transforms.Resize((299, 299), interpolation=transforms.InterpolationMode.BILINEAR)
+        # Set the transformation
+        if transform is None:
+            transform = transforms.Compose([
+                transforms.Lambda(lambda x: F.interpolate(x, (299, 299), mode='bilinear', align_corners=False)),
+                transforms.Normalize((0.5,), (0.5,))
+            ])
 
     # Extract the features of the two data sets
     features1 = extract_features(
-        model, dataset1, resizer,
+        model, dataset1, transform,
         device=device, batch_size=batch_size, num_workers=num_workers
     )
     features2 = extract_features(
-        model, dataset2, resizer,
+        model, dataset2, transform,
         device=device, batch_size=batch_size, num_workers=num_workers
     )
 
@@ -105,7 +110,7 @@ def fid_score(
 def extract_features(
     model: nn.Module,
     dataset: data.Dataset,
-    resizer: Optional[nn.Module] = None,
+    transform: Optional[Any] = None,
     device: Optional[torch.device] = None,
     **kwargs
 ) -> torch.Tensor:
@@ -114,7 +119,7 @@ def extract_features(
 
     :param model: The model to use to extract the features.
     :param dataset: The data set.
-    :param resizer: The input images resizer. It can be None if no resizing must be applied.
+    :param transform: An optional transformation to apply to every sample.
     :param device: The device used to run the model. If it's None 'cuda' will be used, if available.
     :param kwargs: Additional parameters to pass to the data loader.
     :return: The extracted features for each data sample.
@@ -122,7 +127,7 @@ def extract_features(
     # Get the device to use
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print("Extracting features using device: {}".format(device))
+    print("Extract features using device: {}".format(device))
 
     # Instantiate the data loader
     data_loader = data.DataLoader(dataset, **kwargs)
@@ -136,8 +141,8 @@ def extract_features(
     with torch.no_grad():
         features = list()
         for batch in data_loader:
-            if resizer is not None:
-                batch = resizer(batch)
+            if transform is not None:
+                batch = transform(batch)
             batch = batch.to(device)
             batch_features = model(batch)
             features.append(batch_features)

@@ -8,11 +8,11 @@ from deeprob.flows.models.maf import MAF
 from deeprob.flows.models.realnvp import RealNVP1d, RealNVP2d
 from deeprob.utils.statistics import compute_bpp
 from deeprob.torch.metrics import fid_score
+from deeprob.torch.transforms import Quantize
 
 from experiments.datasets import load_continuous_dataset, load_vision_dataset
 from experiments.datasets import CONTINUOUS_DATASETS, VISION_DATASETS
-from experiments.utils import collect_results_generative, collect_samples
-from experiments.utils import sample_fid_datasets, save_grid_images
+from experiments.utils import collect_results_generative, collect_samples, save_grid_images
 
 
 if __name__ == '__main__':
@@ -181,13 +181,9 @@ if __name__ == '__main__':
     if is_vision_dataset:
         bpp = compute_bpp(mean_ll, data_train.features_shape)
         if args.model in ['realnvp-2d']:
-            orig_samples, artif_samples = sample_fid_datasets(
-                model, data_test, n_samples=1000, batch_size=args.batch_size
-            )
-            del model  # Delete the model to reserve some extra memory
-            fid = fid_score(
-                orig_samples, artif_samples, batch_size=max(1, args.batch_size // 2)
-            )
+            samples = collect_samples(model, n_samples=5000, batch_size=args.batch_size)
+            del model  # Delete the model to reserve some extra memory required to compute the FID score
+            fid = fid_score(data_test, samples, batch_size=max(1, args.batch_size // 4))
 
     # Save the results
     results = {

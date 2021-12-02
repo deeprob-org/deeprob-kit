@@ -117,40 +117,6 @@ def collect_samples(model: ProbabilisticModel, n_samples: int = 1, batch_size: O
     return torch.cat(batches, dim=0)
 
 
-def sample_fid_datasets(
-    model: ProbabilisticModel,
-    data_test: Union[UnsupervisedDataset, WrappedDataset],
-    n_samples: int = 1000,
-    batch_size: int = 100,
-    random_state: RandomState = 42
-) -> Tuple[data.Dataset, data.Dataset]:
-    """
-    Sample the data sets used to compute the FID score.
-
-    :param model: The model.
-    :param data_test: The test data.
-    :param n_samples: The number of samples to use.
-    :param batch_size: The batch size used to generate artificial samples from the model.
-    :param random_state: The random state to use when sampling the test set.
-    :return: A subset of the test data samples and the artificial data samples.
-    :raises ValueError: If the number of artificial samples is greater than the size of the test set.
-    """
-    # Check the number of samples
-    if n_samples > len(data_test):
-        raise ValueError("The number of samples cannot be greater than the number of samples in the test set")
-
-    # Check the random state
-    random_state = check_random_state(random_state)
-
-    # Sample some artificial data in batch mode
-    samples = collect_samples(model, n_samples, batch_size)
-
-    # Generate a subset of the original test data set.
-    data_indices = random_state.choice(len(data_test), size=n_samples, replace=False)
-
-    return data.Subset(data_test, data_indices), UnsupervisedDataset(samples, transform=data_test.transform)
-
-
 def collect_image_completions(
     model: ProbabilisticModel,
     data_test: Union[UnsupervisedDataset, WrappedDataset],
