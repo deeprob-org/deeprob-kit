@@ -6,7 +6,7 @@ import torch
 import numpy as np
 
 from deeprob.spn.models.dgcspn import DgcSpn
-from deeprob.utils.statistics import compute_mean_quantiles
+from deeprob.utils.statistics import compute_mean_quantiles, compute_bpp
 
 from experiments.datasets import VISION_DATASETS, load_vision_dataset
 from experiments.utils import collect_results_generative, collect_results_discriminative
@@ -146,9 +146,8 @@ if __name__ == '__main__':
         with open(results_filepath, 'w') as f:
             json.dump(results, f, indent=4)
     else:
-        mean_ll, stddev_ll, bpp = collect_results_generative(
+        mean_ll, stddev_ll = collect_results_generative(
             model, data_train, data_valid, data_test,
-            compute_bpp=True,
             lr=args.learning_rate,
             batch_size=args.batch_size,
             epochs=args.epochs,
@@ -159,16 +158,19 @@ if __name__ == '__main__':
             verbose=args.verbose
         )
 
-        # Save the results
-        results = {
-            'log_likelihood': {'mean': mean_ll, 'stddev': stddev_ll}, 'bpp': bpp,
-            'settings': args.__dict__
-        }
-        with open(results_filepath, 'w') as f:
-            json.dump(results, f, indent=4)
-
         # Make image completions and save them
         images = collect_image_completions(model, data_test, n_samples=10, random_state=args.seed)
         if data_train.transform is not None:
             images = torch.stack([data_train.transform.backward(x) for x in images])
         save_grid_images(images, completions_filepath, nrow=5)
+
+        # Compute BPP score
+        bpp = compute_bpp(mean_ll, data_train.features_shape)
+
+        # Save the results
+        results = {
+            'log_likelihood': {'mean': mean_ll, 'stddev': stddev_ll},
+            'bpp': bpp, 'settings': args.__dict__
+        }
+        with open(results_filepath, 'w') as f:
+            json.dump(results, f, indent=4)

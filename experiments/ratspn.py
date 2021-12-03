@@ -5,6 +5,7 @@ import argparse
 import torch
 
 from deeprob.spn.models.ratspn import GaussianRatSpn, BernoulliRatSpn
+from deeprob.utils.statistics import compute_bpp
 
 from experiments.datasets import load_binary_dataset, load_continuous_dataset, load_vision_dataset
 from experiments.datasets import BINARY_DATASETS, CONTINUOUS_DATASETS, VISION_DATASETS
@@ -160,9 +161,8 @@ if __name__ == '__main__':
         with open(results_filepath, 'w') as f:
             json.dump(results, f, indent=4)
     else:
-        mean_ll, stddev_ll, bpp = collect_results_generative(
+        mean_ll, stddev_ll = collect_results_generative(
             model, data_train, data_valid, data_test,
-            compute_bpp=is_vision_dataset,
             lr=args.learning_rate,
             batch_size=args.batch_size,
             epochs=args.epochs,
@@ -173,17 +173,22 @@ if __name__ == '__main__':
             verbose=args.verbose
         )
 
-        # Save the results
-        results = {
-            'log_likelihood': {'mean': mean_ll, 'stddev': stddev_ll}, 'bpp': bpp,
-            'settings': args.__dict__
-        }
-        with open(results_filepath, 'w') as f:
-            json.dump(results, f, indent=4)
-
         # Sample and save some images
         if is_vision_dataset:
             images = collect_samples(model, 100)
             if data_train.transform is not None:
                 images = torch.stack([data_train.transform.backward(x) for x in images])
             save_grid_images(images, samples_filepath)
+
+        # Compute BPP score, if necessary
+        bpp = None
+        if is_vision_dataset:
+            bpp = compute_bpp(mean_ll, data_train.features_shape)
+
+        # Save the results
+        results = {
+            'log_likelihood': {'mean': mean_ll, 'stddev': stddev_ll},
+            'bpp': bpp, 'settings': args.__dict__
+        }
+        with open(results_filepath, 'w') as f:
+            json.dump(results, f, indent=4)

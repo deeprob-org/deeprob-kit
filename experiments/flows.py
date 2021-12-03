@@ -6,6 +6,8 @@ import torch
 
 from deeprob.flows.models.maf import MAF
 from deeprob.flows.models.realnvp import RealNVP1d, RealNVP2d
+from deeprob.utils.statistics import compute_bpp
+from deeprob.torch.metrics import fid_score
 
 from experiments.datasets import load_continuous_dataset, load_vision_dataset
 from experiments.datasets import CONTINUOUS_DATASETS, VISION_DATASETS
@@ -154,9 +156,8 @@ if __name__ == '__main__':
         raise NotImplementedError("Experiments for model {} are not implemented".format(args.model))
 
     # Train the model and collect the results
-    mean_ll, stddev_ll, bpp = collect_results_generative(
+    mean_ll, stddev_ll = collect_results_generative(
         model, data_train, data_valid, data_test,
-        compute_bpp=is_vision_dataset,
         lr=args.learning_rate,
         batch_size=args.batch_size,
         epochs=args.epochs,
@@ -167,16 +168,26 @@ if __name__ == '__main__':
         verbose=args.verbose
     )
 
-    # Save the results
-    results = {
-        'log_likelihood': {'mean': mean_ll, 'stddev': stddev_ll}, 'bpp': bpp,
-        'settings': args.__dict__
-    }
-    with open(results_filepath, 'w') as f:
-        json.dump(results, f, indent=4)
-
+    # Sample some images, if necessary
     if is_vision_dataset:
         images = collect_samples(model, 100)
         if data_train.transform is not None:
             images = torch.stack([data_train.transform.backward(x) for x in images])
         save_grid_images(images, samples_filepath)
+
+    # Compute BPP and FID scores, if necessary
+    bpp, fid = None, None
+    if is_vision_dataset:
+        bpp = compute_bpp(mean_ll, data_train.features_shape)
+        if args.model in ['realnvp-2d']:
+            samples = collect_samples(model, 5000, batch_size=args.batch_size)
+            del model  # Delete the model to reserve some extra memory required to compute the FID score
+            fid = fid_score(data_test, samples, batch_size=max(1, args.batch_size // 4))
+
+    # Save the results
+    results = {
+        'log_likelihood': {'mean': mean_ll, 'stddev': stddev_ll},
+        'bpp': bpp, 'fid': fid, 'settings': args.__dict__
+    }
+    with open(results_filepath, 'w') as f:
+        json.dump(results, f, indent=4)
