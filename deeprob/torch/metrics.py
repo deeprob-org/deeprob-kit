@@ -1,11 +1,13 @@
 from typing import Optional, Union, Any
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.utils import data
 from torchvision import transforms
 from torchvision import models
+from tqdm import tqdm
 
 from deeprob.utils.statistics import compute_fid
 
@@ -52,9 +54,10 @@ def fid_score(
     dataset2: Union[data.Dataset, torch.Tensor],
     model: Optional[nn.Module] = None,
     transform: Optional[Any] = None,
-    batch_size: int = 128,
+    batch_size: int = 100,
     num_workers: int = 0,
-    device: Optional[torch.device] = None
+    device: Optional[torch.device] = None,
+    verbose: bool = True
 ) -> float:
     """
     Compute the Frechet Inception Distance (FID) between two data samples.
@@ -70,11 +73,12 @@ def fid_score(
     :param batch_size: The batch size to use when extracting features.
     :param num_workers: The number of workers used for the data loaders.
     :param device: The device used to run the model. If it's None 'cuda' will be used, if available.
+    :param verbose: Whether to enable verbose mode.
     :return The FID score.
     """
     if model is None:
         # Load the InceptionV3 model pretrained on ImageNet
-        model = models.inception_v3(pretrained=True, aux_logits=False)
+        model = models.inception_v3(pretrained=True, aux_logits=False, transform_input=False)
 
         # Remove dropout and fully-connected layers (we are interested in extracted features)
         model.dropout = nn.Identity()
@@ -89,29 +93,29 @@ def fid_score(
 
     # Extract the features of the two data sets
     features1 = extract_features(
-        model, dataset1, transform,
-        device=device, batch_size=batch_size, num_workers=num_workers
+        model, dataset1, transform, device=device, verbose=verbose,
+        batch_size=batch_size, num_workers=num_workers
     )
     features2 = extract_features(
-        model, dataset2, transform,
-        device=device, batch_size=batch_size, num_workers=num_workers
+        model, dataset2, transform, device=device, verbose=verbose,
+        batch_size=batch_size, num_workers=num_workers
     )
 
     # Compute the statistics (mean and covariance of the features)
-    mean1, cov1 = torch.mean(features1, dim=0), torch.cov(features1.T)
-    mean2, cov2 = torch.mean(features2, dim=0), torch.cov(features2.T)
+    features1, features2 = features1.cpu().numpy(), features2.cpu().numpy()
+    mean1, cov1 = np.mean(features1, axis=0), np.cov(features1, rowvar=False)
+    mean2, cov2 = np.mean(features2, axis=0), np.cov(features2, rowvar=False)
 
     # Compute and return the FID score
-    mean1, cov1 = mean1.cpu().numpy(), cov1.cpu().numpy()
-    mean2, cov2 = mean2.cpu().numpy(), cov2.cpu().numpy()
     return compute_fid(mean1, cov1, mean2, cov2)
 
 
 def extract_features(
     model: nn.Module,
-    dataset: data.Dataset,
+    dataset: Union[data.Dataset, torch.Tensor],
     transform: Optional[Any] = None,
     device: Optional[torch.device] = None,
+    verbose: bool = True,
     **kwargs
 ) -> torch.Tensor:
     """
@@ -121,6 +125,7 @@ def extract_features(
     :param dataset: The data set.
     :param transform: An optional transformation to apply to every sample.
     :param device: The device used to run the model. If it's None 'cuda' will be used, if available.
+    :param verbose: Whether to enable verbose mode.
     :param kwargs: Additional parameters to pass to the data loader.
     :return: The extracted features for each data sample.
     """
@@ -131,6 +136,10 @@ def extract_features(
 
     # Instantiate the data loader
     data_loader = data.DataLoader(dataset, **kwargs)
+    if verbose:
+        data_loader = tqdm(
+            data_loader, leave=False, bar_format='{l_bar}{bar:24}{r_bar}', unit='batch'
+        )
 
     # Make sure the model is in evaluation mode
     # Moreover, move it to the desired device

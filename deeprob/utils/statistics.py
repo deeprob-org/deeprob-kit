@@ -136,7 +136,8 @@ def compute_fid(
     cov1: np.ndarray,
     mean2: np.ndarray,
     cov2: np.ndarray,
-    blocksize: int = 64
+    blocksize: int = 64,
+    eps: float = 1e-6
 ) -> float:
     """
     Computes the Frechet Inception Distance (FID) between two multivariate Gaussian distributions.
@@ -147,6 +148,7 @@ def compute_fid(
     :param mean2: The mean of the second multivariate Gaussian.
     :param cov2: The covariance of the second multivariate Gaussian.
     :param blocksize: The block size used by the matrix square root algorithm.
+    :param eps: Epsilon value used to avoid singular matrices.
     :return: The FID score.
     :raises ValueError: If there is a shape mismatch between input arrays.
     """
@@ -161,7 +163,7 @@ def compute_fid(
 
     # Compute the matrix square root of the dot product between covariance matrices
     epsdiag = np.zeros_like(cov1)
-    np.fill_diagonal(epsdiag, np.finfo(np.float32).eps)
+    np.fill_diagonal(epsdiag, eps)
     sqrtcov, _ = linalg.sqrtm(np.dot(cov1 + epsdiag, cov2 + epsdiag), disp=False, blocksize=blocksize)
 
     # Numerical errors might give a complex output, even if the input arrays are real
