@@ -1,10 +1,9 @@
 import unittest
 import numpy as np
+from scipy import linalg
 
-from deeprob.utils.statistics import estimate_priors_joints
-from deeprob.utils.statistics import compute_mutual_information
-from deeprob.utils.statistics import compute_mean_quantiles
-from deeprob.utils.statistics import compute_gini
+from deeprob.utils.statistics import estimate_priors_joints, compute_mutual_information
+from deeprob.utils.statistics import compute_mean_quantiles, compute_gini, compute_bpp, compute_fid
 
 
 class TestStatistics(unittest.TestCase):
@@ -52,7 +51,7 @@ class TestStatistics(unittest.TestCase):
         mi = compute_mutual_information(self.priors, self.joints)
         self.assertTrue(np.allclose(np.diag(mi), 0.0))
         self.assertTrue(np.all(mi == mi.T))
-        self.assertAlmostEqual(mi[0, 1], self.mi)
+        self.assertAlmostEqual(mi[0, 1], self.mi, places=6)
 
     def test_compute_mean_quantiles(self):
         mean_quantiles = compute_mean_quantiles(self.data, 2)
@@ -64,6 +63,18 @@ class TestStatistics(unittest.TestCase):
         g = 1.0 - (self.priors[0, 0] ** 2.0 + self.priors[0, 1] ** 2.0)
         self.assertEqual(compute_gini(self.priors[0]), g)
         self.assertRaises(ValueError, compute_gini, self.priors[:, 0])
+
+    def test_compute_bpp(self):
+        self.assertAlmostEqual(compute_bpp(100.0, 10), -100.0 / np.log(2.0) / 10)
+
+    def test_compute_fid(self):
+        dim = 2048
+        m1, c1, m2, c2 = np.zeros(dim), np.eye(dim), np.ones(dim), np.eye(dim)
+        self.assertAlmostEqual(compute_fid(m1, c1, m2, c2), dim)
+        self.assertRaises(ValueError, compute_fid, m1[1:], m2, c1, c2)
+        self.assertRaises(ValueError, compute_fid, m1, c1[1:, 1:], m2, c2)
+        self.assertRaises(ValueError, compute_fid, np.stack([m1, m1]), c1, m2, c2)
+        self.assertRaises(ValueError, compute_fid, m1, c1, m2, np.stack([c2, c2]))
 
 
 if __name__ == '__main__':

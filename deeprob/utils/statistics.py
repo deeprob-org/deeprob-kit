@@ -162,9 +162,11 @@ def compute_fid(
         raise ValueError("Shape mismatch between covariance arrays")
 
     # Compute the matrix square root of the dot product between covariance matrices
-    epsdiag = np.zeros_like(cov1)
-    np.fill_diagonal(epsdiag, eps)
-    sqrtcov, _ = linalg.sqrtm(np.dot(cov1 + epsdiag, cov2 + epsdiag), disp=False, blocksize=blocksize)
+    sqrtcov, _ = linalg.sqrtm(np.dot(cov1, cov2), disp=False, blocksize=blocksize)
+    if np.any(np.isinf(sqrtcov)):  # Matrix square root can give Infinity values in case of singular matrices
+        epsdiag = np.zeros_like(cov1)
+        np.fill_diagonal(epsdiag, eps)
+        sqrtcov, _ = linalg.sqrtm(np.dot(cov1 + epsdiag, cov2 + epsdiag), disp=False, blocksize=blocksize)
 
     # Numerical errors might give a complex output, even if the input arrays are real
     if np.iscomplexobj(sqrtcov) and np.isrealobj(cov1) and np.isrealobj(cov2):
