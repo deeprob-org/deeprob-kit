@@ -9,6 +9,7 @@ from deeprob.spn.utils.filter import filter_nodes_by_type
 from deeprob.spn.utils.validity import check_spn
 from deeprob.spn.structure.node import Sum, Product
 from deeprob.spn.structure.node import bfs, dfs_post_order, topological_order, topological_order_layered
+from deeprob.spn.structure.cltree import BinaryCLT
 from deeprob.spn.structure.leaf import Bernoulli, Gaussian
 from deeprob.spn.structure.io import save_spn_json, load_spn_json
 from deeprob.spn.learning.learnspn import learn_spn
@@ -43,6 +44,9 @@ class TestSPN(unittest.TestCase):
         ], axis=1)
 
         cls.complete_data = complete_binary_data(cls.n_features)
+        mar_features = [1, 2, 3, 5, 8]
+        cls.complete_mar_data = complete_marginalized_binary_data(cls.n_features, mar_features)
+        cls.complete_mpe_data = complete_posterior_binary_data(cls.n_features, mar_features)
 
     @staticmethod
     def __build_normal_spn():
@@ -79,6 +83,12 @@ class TestSPN(unittest.TestCase):
         s0.id, p0.id, p1.id = 0, 1, 2
         b0a.id, b1a.id, b0b.id, b1b.id = 3, 4, 5, 6
         return s0
+
+    def __learn_binary_clt(self):
+        scope = list(range(self.n_features))
+        clt = BinaryCLT(scope, root=0)
+        clt.fit(self.evi_data, [[0, 1]] * self.n_features, alpha=0.1, random_state=42)
+        return clt
 
     def __learn_spn_unpruned(self):
         return learn_spn(
@@ -170,6 +180,14 @@ class TestSPN(unittest.TestCase):
         mpe_ll = log_likelihood(spn, mpe_data).mean()
         self.assertFalse(np.any(np.isnan(mpe_data)))
         self.assertGreater(mpe_ll, evi_ll)
+
+    def test_mpe_complete_inference(self):
+        spn = self.__learn_binary_clt().to_pc()
+        complete_lls = log_likelihood(spn, self.complete_data)
+        mpe_data = mpe(spn, self.complete_mar_data)
+        mpe_ids = binary_data_ids(mpe_data).tolist()
+        expected_mpe_ids = compute_mpe_ids(self.complete_mpe_data, complete_lls.squeeze())
+        self.assertEqual(mpe_ids, expected_mpe_ids)
 
     def test_classifier(self):
         spn = self.__learn_spn_mle_classifier()
