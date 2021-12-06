@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 import os
 import time
 from typing import Union, Optional, Tuple, Dict

@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 from typing import Union, List, Tuple, Type
 
 from deeprob.spn.structure.leaf import Leaf

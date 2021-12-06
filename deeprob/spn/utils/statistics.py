@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 from deeprob.spn.structure.leaf import Leaf
 from deeprob.spn.structure.node import Node, Sum, Product, bfs
 from deeprob.spn.utils.filter import collect_nodes, filter_nodes_by_type

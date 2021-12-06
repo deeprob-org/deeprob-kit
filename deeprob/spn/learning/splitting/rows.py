@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala, Federico Luzzi
+
 from typing import Union, Type, Tuple, List, Callable, Any
 
 import numpy as np

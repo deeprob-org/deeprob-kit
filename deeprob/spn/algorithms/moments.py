@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 import numpy as np
 
 from deeprob.spn.structure.node import Node
