@@ -5,7 +5,6 @@ from typing import Union, Type, List
 import numpy as np
 
 from deeprob.spn.structure.leaf import Leaf, LeafType
-from deeprob.utils.statistics import compute_entropy
 
 
 def entropy_cols(
@@ -14,10 +13,10 @@ def entropy_cols(
     domains: List[Union[list, tuple]],
     random_state: np.random.RandomState,
     e: float = 0.3,
-    alpha: float = 1.0
+    alpha: float = 0.1
 ) -> np.ndarray:
     """
-    Compute Entropy based splitting.
+    Entropy based column splitting method.
 
     :param data: The data.
     :param distributions: Distributions of the features.
@@ -27,18 +26,23 @@ def entropy_cols(
     :return: A partitioning of features.
     """
     _, n_features = data.shape
-    partition = np.zeros(n_features, dtype=int)
+    partition = np.zeros(n_features, dtype=np.int64)
 
     # Compute entropy for each variable
     for i in range(n_features):
-        if distributions[i].LEAF_TYPE == LeafType.DISCRETE:  # discrete
-            entropy = compute_entropy(data[:, i], np.array(domains[i]), 'discrete', alpha)
-        elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS:  # continuous
-            entropy = compute_entropy(data[:, i], np.array(domains[i]), 'continuous', alpha)
+        if distributions[i].LEAF_TYPE == LeafType.DISCRETE:
+            bins = domains[i] + [len(domains[i])]
+            hist, _ = np.histogram(data[:, i], bins=bins)
+            probs = (hist + alpha) / (len(data) + len(hist) * alpha)
+            entropy = -np.sum(probs * np.log2(probs))
+        elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS:
+            hist, _ = np.histogram(data[:, i], bins='scott')
+            probs = (hist + alpha) / (len(data) + len(hist) * alpha)
+            entropy = -np.sum(probs * np.log2(probs)) / np.log2(len(hist))
         else:
-            raise ValueError('Leaves distributions must be either discrete or continuous')
+            raise ValueError("Leaves distributions must be either discrete or continuous")
 
-        # Add to cluster if entropy less than treshold
+        # Add to cluster if entropy is less than the threshold
         if entropy < e:
             partition[i] = 1
 
@@ -51,11 +55,11 @@ def entropy_adaptive_cols(
     domains: List[Union[list, tuple]],
     random_state: np.random.RandomState,
     e: float = 0.3,
-    alpha: float = 1.0,
+    alpha: float = 0.1,
     size: int = None
 ) -> np.ndarray:
     """
-    Compute Adaptive Entropy based splitting.
+    Adaptive Entropy based column splitting method.
 
     :param data: The data.
     :param distributions: Distributions of the features.
@@ -67,25 +71,10 @@ def entropy_adaptive_cols(
     :raises ValueError: If the size of the data is missing.
     """
     if size is None:
-        raise ValueError("Missing size input for entropy adaptive computation")
+        raise ValueError("Missing data size for Adaptive Entropy column splitting method")
 
-    _, n_features = data.shape
-    partition = np.zeros(n_features, dtype=int)
-
-    # Compute entropy for each variable
-    for i in range(n_features):
-        if distributions[i].LEAF_TYPE == LeafType.DISCRETE:  # discrete
-            entropy = compute_entropy(data[:, i], np.array(domains[i]), 'discrete', alpha)
-        elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS:  # continuous
-            entropy = compute_entropy(data[:, i], np.array(domains[i]), 'continuous', alpha)
-        else:
-            raise ValueError('Leaves distributions must be either discrete or continuous')
-
-        # Adaptive entropy
-        e = max(e * (data.shape[0] / size), 1e-07)
-
-        # Add to cluster if entropy less than threshold
-        if entropy < e:
-            partition[i] = 1
-
-    return partition
+    return entropy_cols(
+        data, distributions, domains, random_state,
+        e=max(e * (len(data) / size), np.finfo(np.float32).eps),
+        alpha=alpha
+    )

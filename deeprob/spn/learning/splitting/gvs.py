@@ -4,7 +4,6 @@ from typing import Union, Type, List
 from collections import deque
 
 import numpy as np
-from scipy.stats import bernoulli
 
 from deeprob.spn.structure.leaf import LeafType, Leaf
 
@@ -70,8 +69,7 @@ def rgvs_cols(
     :raises ValueError: If the leaf distributions are discrete and continuous.
     """
     _, n_features = data.shape
-    k = np.int(np.max([np.sqrt(n_features), 2]))
-
+    k = int(max(np.sqrt(n_features), 2))
     if k == n_features:
         return gvs_cols(data, distributions, domains, random_state, p)
 
@@ -86,11 +84,9 @@ def rgvs_cols(
     partition_gvs = gvs_cols(data_gvs, distributions_gvs, domains_gvs, random_state, p)
 
     if (partition_gvs != 1).all():
-        partition = np.zeros(n_features, dtype=np.int64)
-        return partition
+        return np.zeros(n_features, dtype=np.int64)
 
-    r = bernoulli.rvs(0.5, size=1)
-    if r[0] == 0:
+    if random_state.rand() < 0.5:
         # excluded in first cluster 0
         partition = np.zeros(n_features, dtype=np.int64)
     else:
@@ -120,8 +116,7 @@ def wrgvs_cols(
     :raises ValueError: If the leaf distributions are discrete and continuous.
     """
     _, n_features = data.shape
-    k = np.int(np.max([np.sqrt(n_features), 2]))
-
+    k = int(max(np.sqrt(n_features), 2))
     if k == n_features:
         return gvs_cols(data, distributions, domains, random_state, p)
 
@@ -136,19 +131,19 @@ def wrgvs_cols(
     partition_gvs = gvs_cols(data_gvs, distributions_gvs, domains_gvs, random_state, p)
 
     if ((partition_gvs != 1).all()) or ((partition_gvs != 0).all()):
-        partition = np.zeros(n_features, dtype=np.int64)
-        return partition
+        return np.zeros(n_features, dtype=np.int64)
 
     part_0 = set(rand_perm[partition_gvs == 0])
     part_1 = set(rand_perm[partition_gvs == 1])
-    part_0_el = random_state.choice(list(part_0), 1, replace=False)[0]
-    part_1_el = random_state.choice(list(part_1), 1, replace=False)[0]
+    part_0_el = random_state.choice(list(part_0), replace=False)
+    part_1_el = random_state.choice(list(part_1), replace=False)
     feature_excluded = set(range(n_features)) - set(rand_perm)
 
     for f_i in feature_excluded:
         # g testing for deciding which cluster
-        if gtest(data, f_i, part_0_el, distributions, domains, p, test=False) > \
-                gtest(data, f_i, part_1_el, distributions, domains, p, test=False):
+        g_val0 = gtest(data, f_i, part_0_el, distributions, domains, p, test=False)
+        g_val1 = gtest(data, f_i, part_1_el, distributions, domains, p, test=False)
+        if g_val0 > g_val1:
             part_0.add(f_i)
         else:
             part_1.add(f_i)
@@ -188,27 +183,22 @@ def gtest(
         b2 = domains[j] + [len(domains[j])]
         hist, _, _ = np.histogram2d(x1, x2, bins=[b1, b2])
     elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS and distributions[j].LEAF_TYPE == LeafType.CONTINUOUS:
-        bins = np.ceil(np.cbrt(n_samples)).astype(np.int64)
-        hist, _, _ = np.histogram2d(x1, x2, bins=bins)
+        hist, _, _ = np.histogram2d(x1, x2, bins='scott')
     else:
-        raise ValueError('Leaves distributions must be either discrete or continuous')
-
-    m1, m2 = np.sum(hist, axis=1), np.sum(hist, axis=0)
-    f1, f2 = np.count_nonzero(m1), np.count_nonzero(m2)
-    dof = (f1 - 1) * (f2 - 1)
+        raise ValueError("Leaves distributions must be either discrete or continuous")
 
     # Compute G-test statistics
-    g = 0.0
-    for u, c1 in enumerate(m1):
-        for v, c2 in enumerate(m2):
-            c = hist[u, v]
-            if c != 0:
-                e = (c1 * c2) / n_samples
-                g += c * np.log(c / e)
-    g_val = 2.0 * g
+    hist = hist.astype(np.float32) + np.finfo(np.float32).eps
+    m1 = np.sum(hist, axis=1, keepdims=True)
+    m2 = np.sum(hist, axis=0, keepdims=True)
+    e = m1 * m2 / n_samples
+    g_val = 2.0 * np.sum(hist * np.log(hist / e))
 
     # Return test result
     if test:
+        f1 = np.count_nonzero(m1)
+        f2 = np.count_nonzero(m2)
+        dof = (f1 - 1) * (f2 - 1)
         p_thresh = 2.0 * dof * p
         return g_val < p_thresh
 

@@ -8,6 +8,7 @@ from tqdm import tqdm
 from deeprob.spn.structure.leaf import LeafType, Leaf
 from deeprob.spn.structure.node import Node, Sum, assign_ids
 from deeprob.spn.learning.learnspn import learn_spn
+from deeprob.spn.learning.xpc import learn_xpc, learn_expc
 from deeprob.spn.algorithms.structure import prune
 
 
@@ -15,6 +16,7 @@ def learn_estimator(
     data: np.ndarray,
     distributions: List[Type[Leaf]],
     domains: Optional[List[Union[list, tuple]]] = None,
+    method: str = 'learnspn',
     **kwargs
 ) -> Node:
     """
@@ -25,14 +27,29 @@ def learn_estimator(
     :param domains: A list of domains (one for each feature). Each domain is either a list of values, for discrete
                     distributions, or a tuple (consisting of min value and max value), for continuous distributions.
                     If None, domains are determined automatically.
-    :param kwargs: Other parameters for structure learning.
+    :param method: The method used for structure learning. It can be either 'learnspn', 'xpc' or 'ensemble-xpc'.
+    :param kwargs: Additional parameters for structure learning.
     :return: A learned valid and optimized SPN.
+    :raises ValueError: If the method used for structure learning is not known.
+    :raises ValueError: If the method is 'xpc' or 'ensemble-xpc' but the variable domains are not binary.
     """
     if domains is None:
         domains = compute_data_domains(data, distributions)
 
-    root = learn_spn(data, distributions, domains, **kwargs)
-    return prune(root, copy=False)
+    if method == 'learnspn':
+        root = learn_spn(data, distributions, domains, **kwargs)
+        return prune(root, copy=False)
+    if method == 'xpc':
+        if not all(d == [0, 1] for d in domains):
+            raise ValueError("The domains must be binary for learning a XPC")
+        root, _ = learn_xpc(data, **kwargs)
+        return root
+    if method == 'ensemble-xpc':
+        if not all(d == [0, 1] for d in domains):
+            raise ValueError("The domains must be binary for learning an Ensemble-XPC")
+        root, _ = learn_expc(data, **kwargs)
+        return root
+    raise ValueError("Unknown SPN learning method called {}".format(method))
 
 
 def learn_classifier(

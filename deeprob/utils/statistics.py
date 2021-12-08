@@ -1,8 +1,9 @@
 # MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala, Federico Luzzi
 
-from typing import Tuple, Union, List
+from typing import Union, Tuple
 
 import numpy as np
+from scipy import linalg
 
 from deeprob.utils.data import check_data_dtype
 
@@ -108,70 +109,74 @@ def estimate_priors_joints(data: np.ndarray, alpha: float = 0.1) -> Tuple[np.nda
     return priors, joints
 
 
-def compute_entropy(
-    data: np.ndarray,
-    domains: List[Union[list, tuple]],
-    leaf_type: str,
-    alpha: float = 0.1
+def compute_gini(probs: np.ndarray) -> float:
+    """
+    Computes the Gini index given some probabilities.
+
+    :param probs: The probabilities.
+    :return: The Gini index.
+    :raises ValueError: If the probabilities doesn't sum up to one.
+    """
+    if not np.isclose(np.sum(probs), 1.0):
+        raise ValueError("Probabilities must sum up to one")
+    return 1.0 - np.sum(probs ** 2.0)
+
+
+def compute_bpp(avg_ll: float, shape: Union[int, tuple, list]):
+    """
+    Compute the average number of bits per pixel (BPP).
+
+    :param avg_ll: The average log-likelihood, expressed in nats.
+    :param shape: The number of dimensions or, alternatively, a sequence of dimensions.
+    :return: The average number of bits per pixel.
+    """
+    return -avg_ll / (np.log(2.0) * np.prod(shape))
+
+
+def compute_fid(
+    mean1: np.ndarray,
+    cov1: np.ndarray,
+    mean2: np.ndarray,
+    cov2: np.ndarray,
+    blocksize: int = 64,
+    eps: float = 1e-6
 ) -> float:
     """
-    Computes the entropy of a feature.
+    Computes the Frechet Inception Distance (FID) between two multivariate Gaussian distributions.
+    This implementation has been readapted from https://github.com/mseitzer/pytorch-fid.
 
-    :param data: The data.
-    :param domains: Domain of the feature (numpy array).
-    :param leaf_type: Type of variable.
-    :param alpha: laplacian alpha to apply at frequence.
-    :return: Value of the entropy.
-    :raises ValueError: If the leaf distributions are NOT discrete or continuous.
+    :param mean1: The mean of the first multivariate Gaussian.
+    :param cov1: The covariance of the first multivariate Gaussian.
+    :param mean2: The mean of the second multivariate Gaussian.
+    :param cov2: The covariance of the second multivariate Gaussian.
+    :param blocksize: The block size used by the matrix square root algorithm.
+    :param eps: Epsilon value used to avoid singular matrices.
+    :return: The FID score.
+    :raises ValueError: If there is a shape mismatch between input arrays.
     """
-    if leaf_type == 'discrete':
-        one_counts = np.sum(data)
-        zero_counts = len(data) - one_counts
-        smoth_freq = np.array([one_counts, zero_counts]) + alpha
-        probs = smoth_freq / (data.shape[0] + (len(domains) * alpha))
-        log_probs = np.log2(probs)
-        ent = -(probs * log_probs).sum()
-    elif leaf_type == 'continuous':
-        bins = np.ceil(np.cbrt(data.shape[0])).astype(np.int)
-        hist, bin_edges = np.histogram(data, bins=bins)
-        smoth_freq = hist + alpha
-        probs = smoth_freq / (data.shape[0] + ((len(bin_edges) - 1) * alpha))
-        log_probs = np.log2(probs)
-        ent = -(probs * log_probs).sum() / np.log2(bins)
-    else:
-        raise ValueError('Leaf type distribution must be either discrete or continuous')
+    if mean1.ndim != 1 or mean2.ndim != 1:
+        raise ValueError("Mean arrays must be one-dimensional")
+    if cov1.ndim != 2 or cov2.ndim != 2:
+        raise ValueError("Covariance arrays must be two-dimensional")
+    if mean1.shape != mean2.shape:
+        raise ValueError("Shape mismatch between mean arrays")
+    if cov1.shape != cov2.shape:
+        raise ValueError("Shape mismatch between covariance arrays")
 
-    return max(min(ent, 1.0), 0.0)
+    # Compute the matrix square root of the dot product between covariance matrices
+    sqrtcov, _ = linalg.sqrtm(np.dot(cov1, cov2), disp=False, blocksize=blocksize)
+    if np.any(np.isinf(sqrtcov)):  # Matrix square root can give Infinity values in case of singular matrices
+        epsdiag = np.zeros_like(cov1)
+        np.fill_diagonal(epsdiag, eps)
+        sqrtcov, _ = linalg.sqrtm(np.dot(cov1 + epsdiag, cov2 + epsdiag), disp=False, blocksize=blocksize)
 
+    # Numerical errors might give a complex output, even if the input arrays are real
+    if np.iscomplexobj(sqrtcov) and np.isrealobj(cov1) and np.isrealobj(cov2):
+        sqrtcov = sqrtcov.real
 
-def compute_gini(
-    data: np.ndarray,
-    domains: List[Union[list, tuple]],
-    leaf_type: str,
-    alpha: float = 0.1
-) -> float:
-    """
-    Computes the Gini value of a feature.
+    # Compute the dot product of the difference between mean arrays
+    diffm = mean1 - mean2
+    diffmdot = np.dot(diffm, diffm)
 
-    :param data: The data.
-    :param domains: Domain of the feature (numpy array).
-    :param alpha: laplacian alpha to apply at frequence.
-    :return: Value of the Gini computation.
-    :raises ValueError: If the leaf distributions are NOT discrete or continuous.
-    """
-    if leaf_type == 'discrete': # discrete
-        one_counts = np.sum(data)
-        zero_counts = len(data) - one_counts
-        smoth_freq = np.array([one_counts, zero_counts]) + alpha
-        probs = smoth_freq / (data.shape[0] + (len(domains) * alpha))
-        gini = 1 - np.sum(probs**2)
-    elif leaf_type == 'continuous':
-        bins = np.ceil(np.cbrt(data.shape[0])).astype(np.int)
-        hist, bin_edges = np.histogram(data, bins=bins)
-        smoth_freq = hist + alpha
-        probs = smoth_freq / (data.shape[0] + ((len(bin_edges) - 1) * alpha))
-        gini = 1 - np.sum(probs**2)
-    else:
-        raise ValueError('Leaf type distribution must be either discrete or continuous')
-
-    return max(min(gini, 1.0), 0.0)
+    # Return the final FID score
+    return diffmdot + np.trace(cov1) + np.trace(cov2) - 2.0 * np.trace(sqrtcov)

@@ -51,8 +51,8 @@ class NormalizingFlow(ProbabilisticModel):
 
         # Build the base distribution, if necessary
         if in_base is None:
-            self.in_base_loc = nn.Parameter(torch.zeros(in_features, requires_grad=False))
-            self.in_base_scale = nn.Parameter(torch.ones(in_features, requires_grad=False))
+            self.in_base_loc = nn.Parameter(torch.zeros(in_features), requires_grad=False)
+            self.in_base_scale = nn.Parameter(torch.ones(in_features), requires_grad=False)
             self.in_base = distributions.Normal(self.in_base_loc, self.in_base_scale)
         else:
             self.in_base = in_base

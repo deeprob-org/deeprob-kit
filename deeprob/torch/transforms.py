@@ -89,7 +89,7 @@ class Quantize(Transform):
         Initialize a quantization transformation.
         This transformation computes the following equations:
 
-        | y = clamp(floor(x * 2 ** n_bits), 0, 2 ** n_bits)
+        | y = clamp(floor(x * 2 ** n_bits), 0, 2 ** n_bits - 1) / (2 ** n_bits - 1)
         | x = ((x * (2 ** n_bits - 1)) + u) / (2 ** n_bits)
         | with u ~ Uniform(0, 1)
 
