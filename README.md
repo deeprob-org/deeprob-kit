@@ -5,13 +5,14 @@
 
 ## Abstract
 
-**DeeProb-kit** is a general-purpose Python library that implements several deep probabilistic models,
-putting an effort into unifying and standardizing the experiments across most of them.
-The implementation in a single library of different models permits to easily combine them,
-as a common practice in deep learning research.
-The library consists of a collection of deep probabilistic models such as various kinds of
-*Sum-Product Networks*, *Normalizing Flows* and their possible combinations for density estimation.
-Some models are implemented using *PyTorch* for fast training and inference on GPUs.
+**DeeProb-kit** is a general-purpose Python library providing a collection of deep probabilistic models (DPMs) which
+are easy to use and extend.
+It also includes efficiently implemented learning techniques, inference routines and statistical algorithms.
+The availability of a representative selection of the most common DPMs in a single library makes it possible to combine
+them in a straightforward manner, a common practice in deep learning research nowadays, which however is still missing
+for certain class of models. 
+Moreover, **DeeProb-kit** provides high-quality fully-documented APIs, and it will help the community to accelerate research
+on DPMs as well as improve experiments' reproducibility.
 
 ## Features
 
@@ -23,26 +24,30 @@ Some models are implemented using *PyTorch* for fast training and inference on G
 - High-order moments computation for SPNs.
 - JSON I/O operations for SPNs and CLTs. <sup>[4](#r4)</sup>
 - Plotting operations based on NetworkX for SPNs and CLTs. <sup>[4](#r4)</sup>
-- Randomized And Tensorized SPNs (RAT-SPNs) using PyTorch. <sup>[6](#r6)</sup>
-- Masked Autoregressive Flows (MAFs) using PyTorch. <sup>[7](#r7)</sup>
-- Real Non-Volume-Preserving (RealNVP) and Non-linear Independent Component Estimation (NICE) flows. <sup>[8](#r8) [9](#r9)</sup>
-- Deep Generalized Convolutional SPNs (DGC-SPNs) using PyTorch. <sup>[11](#r11)</sup>
+- Randomized And Tensorized SPNs (RAT-SPNs). <sup>[6](#r6)</sup>
+- Deep Generalized Convolutional SPNs (DGC-SPNs). <sup>[11](#r11)</sup>
+- Masked Autoregressive Flows (MAFs). <sup>[7](#r7)</sup>
+- Real Non-Volume-Preserving (RealNVP) flows. <sup>[8](#r8)</sup>
+- Non-linear Independent Component Estimation (NICE) flows. <sup>[9](#r9)</sup>
 
 The collection of implemented models is summarized in the following table.
 The supported data dimensionality for each model is showed in the *Input Dimensionality* column.
 Moreover, the *Supervised* column tells which model is suitable for a supervised learning task,
 other than density estimation task.
 
+Legend — D: one-dimensional size, C: channels, H: height, W: width.
+
 | Model      | Description                                        | Input Dimensionality | Supervised |
 |------------|----------------------------------------------------|:--------------------:|:----------:|
 | Binary-CLT | Binary Chow-Liu Tree (CLT)                         |           D          |      ❌     |
-| SPN        | Vanilla Sum-Product Network, using LearnSPN        |           D          |      ✔     |
-| XPC        | Random Probabilistic Circuits, using LearnXPC      |           D          |      ✔     |
+| SPN        | Vanilla Sum-Product Network                        |           D          |      ✔     |
+| MSPN       | Mixed Sum-Product Network                          |           D          |      ✔     |
+| XPC        | Random Probabilistic Circuit                       |           D          |      ✔     |
 | RAT-SPN    | Randomized and Tensorized Sum-Product Network      |           D          |      ✔     |
-| DGC-SPN    | Deep Generalized Convolutional Sum-Product Network | (1, D, D); (3, D, D) |      ✔     |
+| DGC-SPN    | Deep Generalized Convolutional Sum-Product Network |       (C, D, D)      |      ✔     |
 | MAF        | Masked Autoregressive Flow                         |           D          |      ❌     |
-| NICE       | Non-linear Independent Components Estimation Flow  | (1, H, W); (3, H, W) |      ❌     |
-| RealNVP    | Real-valued Non-Volume-Preserving Flow             | (1, H, W); (3, H, W) |      ❌     |
+| NICE       | Non-linear Independent Components Estimation Flow  |   D and (C, H, W)    |      ❌     |
+| RealNVP    | Real-valued Non-Volume-Preserving Flow             |   D and (C, H, W)    |      ❌     |
 
 ## Installation
 

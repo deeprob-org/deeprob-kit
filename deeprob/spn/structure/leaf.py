@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 import abc
 from enum import Enum
 from typing import Optional, Union, List

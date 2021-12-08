@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 from collections import defaultdict
 
 import numpy as np

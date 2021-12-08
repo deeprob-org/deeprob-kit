@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 import os
 from typing import Union
 from collections import OrderedDict
@@ -43,7 +45,7 @@ class EarlyStopping:
         """
         return self.__counter >= self.patience
 
-    def get_best_state(self) -> OrderedDict[str, torch.Tensor]:
+    def get_best_state(self) -> OrderedDict:
         """
         Get the best model's state dictionary.
         """

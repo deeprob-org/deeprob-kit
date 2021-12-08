@@ -1,3 +1,3 @@
 from .dgcspn import DgcSpn
-from .ratspn import GaussianRatSpn, BernoulliRatSpn
+from .ratspn import RatSpn, GaussianRatSpn, BernoulliRatSpn
 from .sklearn import SPNEstimator, SPNClassifier

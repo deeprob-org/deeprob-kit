@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 from __future__ import annotations
 import itertools
 from typing import Optional, Tuple

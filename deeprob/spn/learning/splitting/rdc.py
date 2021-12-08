@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 import warnings
 from typing import Union, Type, List, Callable
 from itertools import combinations

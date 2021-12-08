@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 from enum import Enum
 from collections import deque
 from typing import Optional, Union, Type, List, NamedTuple

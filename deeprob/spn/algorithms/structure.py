@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 from typing import List
 from copy import deepcopy
 from collections import defaultdict

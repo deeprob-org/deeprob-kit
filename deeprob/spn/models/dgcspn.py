@@ -1,3 +1,5 @@
+# MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
+
 from typing import Optional, Union, Tuple, List
 
 import numpy as np
