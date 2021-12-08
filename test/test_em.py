@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from sklearn.datasets import make_blobs
-from experiments.datasets import load_binary_dataset
+from sklearn.datasets import load_diabetes
 from test.utils import resample_data
 
 from deeprob.spn.structure.node import Sum, Product
@@ -19,10 +19,10 @@ class TestEM(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         random_state = np.random.RandomState(42)
-        data, _, _ = load_binary_dataset('experiments/datasets', 'nltcs', raw=True)
-        data = data.astype(np.float32)
+        data, _, = load_diabetes(return_X_y=True)
+        data = (data < np.median(data, axis=0)).astype(np.float32)
         cls.n_samples, cls.n_features = data.shape
-        cls.evi_data = resample_data(data, 5000, random_state)
+        cls.evi_data = resample_data(data, 1000, random_state)
         cls.blobs_data, _ = make_blobs(
             n_samples=1000, n_features=2, random_state=1337,
             centers=[[-1.0, 1.0], [1.0, -1.0]], cluster_std=0.25
@@ -42,14 +42,14 @@ class TestEM(unittest.TestCase):
 
     def __learn_spn_mle(self):
         return learn_estimator(
-            self.evi_data, [Bernoulli] * self.n_features,
+            self.evi_data, [Bernoulli] * self.n_features, [[0, 1]] * self.n_features,
             learn_leaf='mle', split_rows='gmm', split_cols='gvs', min_rows_slice=512,
             random_state=42, verbose=False
         )
 
     def __learn_spn_clt(self):
         return learn_estimator(
-            self.evi_data, [Bernoulli] * self.n_features,
+            self.evi_data, [Bernoulli] * self.n_features, [[0, 1]] * self.n_features,
             learn_leaf='binary-clt', split_rows='kmeans', split_cols='gvs', min_rows_slice=512,
             learn_leaf_kwargs={'to_pc': False},
             random_state=42, verbose=False
@@ -62,7 +62,7 @@ class TestEM(unittest.TestCase):
             random_init=False, random_state=42, verbose=False
         )
         ll = log_likelihood(spn, self.evi_data).mean()
-        self.assertAlmostEqual(ll, -6.0, places=1)
+        self.assertAlmostEqual(ll, -5.3, places=1)
 
     def test_clt_binary(self):
         spn = self.__learn_spn_clt()
@@ -71,7 +71,7 @@ class TestEM(unittest.TestCase):
             random_init=True, random_state=42, verbose=False
         )
         ll = log_likelihood(spn, self.evi_data).mean()
-        self.assertAlmostEqual(ll, -5.9, places=1)
+        self.assertAlmostEqual(ll, -5.1, places=1)
 
     def test_spn_gaussian(self):
         spn = self.__build_normal_spn()

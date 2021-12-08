@@ -31,9 +31,7 @@ unit_tests:
 
 # Run benchmarks
 benchmarks:
-	export PYTHONPATH=. && \
-	$(PYTHON) $(BENCHMARK_DIR)/clt_queries.py && \
-	$(PYTHON) $(BENCHMARK_DIR)/spn_queries.py
+	for SCRIPT in $(wildcard $(BENCHMARK_DIR)/run_*.py); do PYTHONPATH=. $(PYTHON) $$SCRIPT; done
 
 # Upload the PIP package
 pip_upload: pip_package

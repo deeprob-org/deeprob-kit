@@ -1,14 +1,15 @@
 import unittest
 import tempfile
 
-from experiments.datasets import load_binary_dataset
+from sklearn.datasets import load_diabetes
 from test.utils import *
 
 from deeprob.spn.utils.statistics import compute_statistics
 from deeprob.spn.utils.filter import filter_nodes_by_type
 from deeprob.spn.utils.validity import check_spn
 from deeprob.spn.structure.node import Sum, Product
-from deeprob.spn.structure.node import bfs, dfs_post_order, topological_order
+from deeprob.spn.structure.node import bfs, dfs_post_order, topological_order, topological_order_layered
+from deeprob.spn.structure.cltree import BinaryCLT
 from deeprob.spn.structure.leaf import Bernoulli, Gaussian
 from deeprob.spn.structure.io import save_spn_json, load_spn_json
 from deeprob.spn.learning.learnspn import learn_spn
@@ -25,15 +26,15 @@ class TestSPN(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         random_state = np.random.RandomState(42)
-        data, _, _ = load_binary_dataset('experiments/datasets', 'nltcs', raw=True)
-        data = data.astype(np.float32)
+        data, _, = load_diabetes(return_X_y=True)
+        data = (data < np.median(data, axis=0)).astype(np.float32)
         cls.n_samples, cls.n_features = data.shape
-        cls.evi_data = resample_data(data, 5000, random_state)
+        cls.evi_data = resample_data(data, 1000, random_state)
         cls.mar_data = random_marginalize_data(cls.evi_data, 0.2, random_state)
 
-        cls.clf_index = 3
+        cls.clf_index = 2
         cls.clf_data = marginalize_data(cls.evi_data, [cls.clf_index])
-        cls.scope = [5, 7, 9, 15, 8]
+        cls.scope = [5, 9, 8]
         mar_scope = [s for s in range(cls.n_features) if s not in cls.scope]
         cls.scope_mar_data = marginalize_data(cls.evi_data, mar_scope)
 
@@ -43,6 +44,9 @@ class TestSPN(unittest.TestCase):
         ], axis=1)
 
         cls.complete_data = complete_binary_data(cls.n_features)
+        mar_features = [1, 2, 3, 5, 8]
+        cls.complete_mar_data = complete_marginalized_binary_data(cls.n_features, mar_features)
+        cls.complete_mpe_data = complete_posterior_binary_data(cls.n_features, mar_features)
 
     @staticmethod
     def __build_normal_spn():
@@ -80,32 +84,38 @@ class TestSPN(unittest.TestCase):
         b0a.id, b1a.id, b0b.id, b1b.id = 3, 4, 5, 6
         return s0
 
+    def __learn_binary_clt(self):
+        scope = list(range(self.n_features))
+        clt = BinaryCLT(scope, root=0)
+        clt.fit(self.evi_data, [[0, 1]] * self.n_features, alpha=0.1, random_state=42)
+        return clt
+
     def __learn_spn_unpruned(self):
         return learn_spn(
             self.evi_data, [Bernoulli] * self.n_features, [[0, 1]] * self.n_features,
-            learn_leaf='mle', split_cols='gvs', min_rows_slice=512,
+            learn_leaf='mle', split_cols='gvs', min_rows_slice=64,
             random_state=42, verbose=False
         )
 
     def __learn_spn_mle(self):
         return learn_estimator(
-            self.evi_data, [Bernoulli] * self.n_features,
-            learn_leaf='mle', split_rows='gmm', split_cols='gvs', min_rows_slice=512,
+            self.evi_data, [Bernoulli] * self.n_features, [[0, 1]] * self.n_features,
+            learn_leaf='mle', split_rows='gmm', split_cols='gvs', min_rows_slice=64,
             random_state=42, verbose=False
         )
 
     def __learn_spn_clt(self):
         return learn_estimator(
-            self.evi_data, [Bernoulli] * self.n_features,
-            learn_leaf='binary-clt', split_rows='kmeans', split_cols='gvs', min_rows_slice=512,
+            self.evi_data, [Bernoulli] * self.n_features, [[0, 1]] * self.n_features,
+            learn_leaf='binary-clt', split_rows='kmeans', split_cols='gvs', min_rows_slice=64,
             learn_leaf_kwargs={'to_pc': False},
             random_state=42, verbose=False
         )
 
     def __learn_spn_mle_classifier(self):
         return learn_classifier(
-            self.evi_data, [Bernoulli] * self.n_features, class_idx=self.clf_index,
-            learn_leaf='binary-clt', split_cols='rdc', min_rows_slice=512, learn_leaf_kwargs={'to_pc': True},
+            self.evi_data, [Bernoulli] * self.n_features, [[0, 1]] * self.n_features, class_idx=self.clf_index,
+            learn_leaf='binary-clt', split_cols='rdc', min_rows_slice=64, learn_leaf_kwargs={'to_pc': True},
             random_state=42, verbose=False
         )
 
@@ -171,12 +181,20 @@ class TestSPN(unittest.TestCase):
         self.assertFalse(np.any(np.isnan(mpe_data)))
         self.assertGreater(mpe_ll, evi_ll)
 
+    def test_mpe_complete_inference(self):
+        spn = self.__learn_binary_clt().to_pc()
+        complete_lls = log_likelihood(spn, self.complete_data)
+        mpe_data = mpe(spn, self.complete_mar_data)
+        mpe_ids = binary_data_ids(mpe_data).tolist()
+        expected_mpe_ids = compute_mpe_ids(self.complete_mpe_data, complete_lls.squeeze())
+        self.assertEqual(mpe_ids, expected_mpe_ids)
+
     def test_classifier(self):
         spn = self.__learn_spn_mle_classifier()
         clf_data = mpe(spn, self.clf_data)
         error_rate = np.mean(np.abs(clf_data[:, self.clf_index] - self.evi_data[:, self.clf_index]))
         self.assertFalse(np.any(np.isnan(clf_data)))
-        self.assertGreater(1.0 - error_rate, 0.8)
+        self.assertGreater(1.0 - error_rate, 0.7)
 
     def test_bfs(self):
         spn = self.__build_dag_spn()
@@ -196,6 +214,15 @@ class TestSPN(unittest.TestCase):
         spn = self.__build_cyclical_spn()
         ordering = topological_order(spn)
         self.assertIsNone(ordering)
+
+    def test_topological_order_layered(self):
+        spn = self.__build_dag_spn()
+        layers = topological_order_layered(spn)
+        node_layered_ids = list(map(lambda layer: list(map(lambda node: node.id, layer)), layers))
+        self.assertEqual(node_layered_ids, [[0], [1, 2, 3], [5, 6, 4, 7]])
+        spn = self.__build_cyclical_spn()
+        layers = topological_order_layered(spn)
+        self.assertIsNone(layers)
 
     def test_prune(self):
         spn = self.__learn_spn_unpruned()
