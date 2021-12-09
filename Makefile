@@ -1,8 +1,8 @@
-PYTHON       = python
-PYLINT       = pylint
-UNITTEST     = unittest
-COVERAGE     = coverage
-SETUP_SOURCE = setup.py
+PYTHON    = python
+PYLINT    = pylint
+UNITTEST  = unittest
+COVERAGE  = coverage
+SETUP_SRC = setup.py
 
 SOURCE_DIR    = deeprob
 TEST_DIR      = test
@@ -16,6 +16,9 @@ UNITTEST_FLAGS = --start-directory $(TEST_DIR)
 
 # Print static code quality and coverage information to stdout
 all: pylint_cli coverage_cli
+
+# Clean all
+clean: clean_coverage clean_pip
 
 # Print static code quality to stdout
 pylint_cli:
@@ -38,12 +41,13 @@ pip_upload: pip_package
 	$(PYTHON) -m twine upload dist/*
 
 # Build the PIP package
-pip_package: $(SETUP_SOURCE)
-	$(PYTHON) $< sdist bdist_wheel
+pip_package: clean_pip $(SETUP_SRC)
+	$(PYTHON) $(SETUP_SRC) sdist bdist_wheel
 
-# Clean files and directories
-clean:
+# Clean tests and coverage related files
+clean_coverage:
 	rm -rf .coverage
-	rm -rf dist
-	rm -rf build
-	rm -rf deeprob_kit.egg-info
+
+# Clean PIP package related files
+clean_pip:
+	rm -rf dist build deeprob_kit.egg-info
