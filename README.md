@@ -1,5 +1,7 @@
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 [![PyPI version](https://badge.fury.io/py/deeprob-kit.svg)](https://badge.fury.io/py/deeprob-kit)
+[![codecov](https://codecov.io/gh/deeprob-org/deeprob-kit/branch/main/graph/badge.svg?token=4ZDC22QYEJ)](https://codecov.io/gh/deeprob-org/deeprob-kit)
+[![Pytest-Coverage](https://github.com/deeprob-org/deeprob-kit/actions/workflows/pytest-coverage.yml/badge.svg)](https://github.com/deeprob-org/deeprob-kit/actions/workflows/pytest-coverage.yml)
 
 ![Logo](docs/deeprob-logo.svg)
 
