@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import List
+from typing import List, Optional
 from itertools import product
 
 
@@ -30,7 +30,7 @@ def compute_mpe_ids(complete_mpe_data: np.ndarray, complete_lls: np.ndarray) -> 
     return mpe_sample_ids.tolist()
 
 
-def resample_data(data: np.ndarray, n_samples: int, random_state: np.random.RandomState) -> np.ndarray:
+def resample_data(data: np.ndarray, n_samples: int, random_state: Optional[np.random.RandomState] = None) -> np.ndarray:
     """
     Resample data with replacement.
 
@@ -39,6 +39,8 @@ def resample_data(data: np.ndarray, n_samples: int, random_state: np.random.Rand
     :param random_state: The random state.
     :return: The resampled data.
     """
+    if random_state is None:
+        random_state = np.random.RandomState(42)
     return data[random_state.choice(len(data), size=n_samples, replace=True)]
 
 
@@ -55,7 +57,7 @@ def marginalize_data(data: np.ndarray, mar_features: List[int]) -> np.ndarray:
     return data
 
 
-def random_marginalize_data(data: np.ndarray, p: float, random_state: np.random.RandomState) -> np.ndarray:
+def random_marginalize_data(data: np.ndarray, p: float, random_state: Optional[np.random.RandomState] = None) -> np.ndarray:
     """
     Marginalize data sample-wise randomly.
 
@@ -64,6 +66,8 @@ def random_marginalize_data(data: np.ndarray, p: float, random_state: np.random.
     :param random_state: The random state.
     :return: The marginalized data (using NaNs).
     """
+    if random_state is None:
+        random_state = np.random.RandomState(42)
     data = data.astype(np.float32, copy=True)
     data[random_state.rand(*data.shape) <= p] = np.nan
     return data

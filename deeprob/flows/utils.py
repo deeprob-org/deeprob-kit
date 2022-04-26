@@ -47,6 +47,8 @@ class Bijector(abc.ABC, nn.Module):
         :param in_features: The number of input features.
         :raises ValueError: If the number of input features is invalid.
         """
+        if isinstance(in_features, torch.Size):
+            in_features = tuple(in_features)
         if not isinstance(in_features, int):
             if not isinstance(in_features, tuple) or len(in_features) != 3:
                 raise ValueError("The number of input features must be either an int or a (C, H, W) tuple")

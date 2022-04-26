@@ -3,6 +3,7 @@ venv
 __pycache__
 
 .coverage
+coverage.xml
 build
 dist
 *.json

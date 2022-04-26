@@ -28,6 +28,10 @@ class NormalizingFlow(ProbabilisticModel):
         :raises ValueError: If the number of input features is invalid.
         :raises ValueError: If the logit value is invalid.
         """
+        if isinstance(in_features, torch.Size):
+            in_features = tuple(in_features)
+            if len(in_features) == 1:
+                in_features = in_features[0]
         if not isinstance(in_features, int):
             if not isinstance(in_features, tuple) or len(in_features) != 3:
                 raise ValueError("The number of input features must be either an int or a (C, H, W) tuple")
