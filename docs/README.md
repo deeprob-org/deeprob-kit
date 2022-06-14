@@ -12,6 +12,6 @@ Finally, it's possible to execute the Makefile script as following:
 # Clean existing documentation (optional)
 make clean
 # Build HTML documentation
-make
+make html
 ```
 The output HTML documentation can be found inside the `_build` directory.
