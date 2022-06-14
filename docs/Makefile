@@ -1,19 +1,37 @@
-SPHINX_OPTS   ?=
-SPHINX_BUILD  ?= sphinx-build
-SPHINX_APIDOC ?= sphinx-apidoc
+# Minimal makefile for Sphinx documentation
+#
+# You can set these variables from the command line, and also
+# from the environment for the first two.
+SPHINXOPTS   ?=
+SPHINXBUILD  ?= sphinx-build
+SPHINXAPIDOC ?= sphinx-apidoc
+SOURCEDIR     = source
+BUILDDIR      = build
+APIDOCDIR     = apidoc
+PYLIBDIR      = ../deeprob
 
-SPHINX_BUILD_DIR  = build
-SPHINX_SOURCE_DIR = source
-API_SOURCE_DIR    = $(SPHINX_SOURCE_DIR)/api
-LIB_SOURCE_DIR    = ../deeprob
+# Put it first so that "make" without argument is like "make help".
+help:
+	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: clean
+# Generate HTML documentation
+html: apidoc
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-html: api
-	$(SPHINX_BUILD) -M html "$(SPHINX_SOURCE_DIR)" "$(SPHINX_BUILD_DIR)" $(SPHINX_OPTS)
+# Generate API docs
+apidoc:
+	@$(SPHINXAPIDOC) -o "$(SOURCEDIR)/$(APIDOCDIR)" "$(PYLIBDIR)"
 
-api:
-	$(SPHINX_APIDOC) -o "$(API_SOURCE_DIR)" "$(LIB_SOURCE_DIR)"
 
+.PHONY: help clean Makefile
+
+# Clean all
 clean:
-	rm -rf "$(SPHINX_BUILD_DIR)" "$(API_SOURCE_DIR)"
+	rm -rf "$(SOURCEDIR)/$(APIDOCDIR)"
+	@$(SPHINXBUILD) -M clean "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# Catch-all target: route all unknown targets to Sphinx using the new
+# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
+%: Makefile
+	echo $@
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

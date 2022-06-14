@@ -11,7 +11,6 @@ release = version = '1.1.0'
 # -- General configuration ---------------------------------------------------
 extensions = [
     'sphinx.ext.duration',
-    'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',

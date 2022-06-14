@@ -16,7 +16,7 @@ A Python library for Deep Probabilistic Modeling
 	:maxdepth: 5
 	:caption: API Modules
 
-	api/modules.rst
+	apidoc/modules.rst
 
 Indices and tables
 ==================
