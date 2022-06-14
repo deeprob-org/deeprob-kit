@@ -8,9 +8,6 @@ SOURCE_DIR    = deeprob
 TEST_DIR      = test
 BENCHMARK_DIR = benchmark
 
-PYLINT_FLAGS   = $(SOURCE_DIR) --exit-zero
-COVERAGE_FLAGS = --source $(SOURCE_DIR)
-UNITTEST_FLAGS = --start-directory $(TEST_DIR)
 
 .PHONY: all clean
 
@@ -22,7 +19,7 @@ clean: clean_coverage clean_pip
 
 # Print static code quality to stdout
 pylint_cli:
-	$(PYLINT) $(PYLINT_FLAGS)
+	$(PYLINT) "$(SOURCE_DIR)"
 
 # Print coverage information to stdout
 coverage_cli: unit_tests
@@ -30,7 +27,7 @@ coverage_cli: unit_tests
 
 # Run unit tests
 unit_tests:
-	$(COVERAGE) run $(COVERAGE_FLAGS) -m $(UNITTEST) discover $(UNITTEST_FLAGS)
+	$(COVERAGE) run --source "$(SOURCE_DIR)" -m $(UNITTEST) discover --start-directory "$(TEST_DIR)"
 
 # Run benchmarks
 benchmarks:
