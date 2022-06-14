@@ -1,4 +1,4 @@
-## Code Examples
+# Code Examples
 
 A collection of code examples can be found in the `examples` directory.
 In order to run the code examples, it is necessary clone the repository.

@@ -1,16 +1,19 @@
-SPHINX_BUILD      = sphinx-multiversion
-SPHINX_BUILD_DIR  = _build
-SPHINX_SOURCE_DIR = .
-SPHINX_INDEX_FILE = index.html
+SPHINX_OPTS   ?=
+SPHINX_BUILD  ?= sphinx-build
+SPHINX_APIDOC ?= sphinx-apidoc
+
+SPHINX_BUILD_DIR  = build
+SPHINX_SOURCE_DIR = source
+API_SOURCE_DIR    = $(SPHINX_SOURCE_DIR)/api
+LIB_SOURCE_DIR    = ../deeprob
 
 .PHONY: clean
 
-# Make the HTML static site
-sphinx_html:
-	$(SPHINX_BUILD) $(SPHINX_SOURCE_DIR) $(SPHINX_BUILD_DIR)
-	cp $(SPHINX_SOURCE_DIR)/$(SPHINX_INDEX_FILE) $(SPHINX_BUILD_DIR)
+html: api
+	$(SPHINX_BUILD) -M html "$(SPHINX_SOURCE_DIR)" "$(SPHINX_BUILD_DIR)" $(SPHINX_OPTS)
 
-# Clean directories
+api:
+	$(SPHINX_APIDOC) -o "$(API_SOURCE_DIR)" "$(LIB_SOURCE_DIR)"
+
 clean:
-	rm -rf $(SPHINX_BUILD_DIR)
-
+	rm -rf "$(SPHINX_BUILD_DIR)" "$(API_SOURCE_DIR)"

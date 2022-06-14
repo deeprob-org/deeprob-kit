@@ -1,39 +1,46 @@
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 project = 'DeeProb-kit'
-author = 'Lorenzo Loconte, Gennaro Gala'
-copyright = '2021, {}'.format(author)
-release = version = '1.0.0'
-sourcelib = 'deeprob'
+author = 'The Deep Probabilistic Modeling Organization'
+copyright = '2022, {}'.format(author)
+release = version = '1.1.0'
 
 # -- General configuration ---------------------------------------------------
 extensions = [
+    'sphinx.ext.duration',
+    'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.githubpages',
     'sphinx.ext.viewcode',
-    'sphinx_multiversion',
-    'myst_parser',
-    'sphinx_rtd_theme'
+    'sphinx.ext.intersphinx',
+    'myst_parser'
 ]
-source_suffix = ['.rst', '.md']
-exclude_patterns = ['api/modules.rst', 'README.md']
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.txt': 'markdown',
+    '.md': 'markdown',
+}
+
+# -- Options for Intersphinx -------------------------------------------------
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
+    'numpy': ("https://docs.scipy.org/doc/numpy/", None),
+    'torch': ("https://pytorch.org/docs/master/", None),
+}
+intersphinx_disabled_domains = ['std']
 
 # -- Options for HTML output -------------------------------------------------
-templates_path = ['_templates']
-html_sidebars = {'**': ['versions.html']}
-html_static_path = ['_static']
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'display_version': False,
     'navigation_depth': 6,
     'collapse_navigation': True,
 }
-html_style = 'css/custom.css'
-html_logo = 'deeprob-logo-minimal.svg'
+html_logo = 'deeprob-logo.svg'
 html_only = True
 
 # -- Autodoc settings --------------------------------------------------------
@@ -46,11 +53,4 @@ autodoc_default_options = {
 }
 
 # -- MyST settings -----------------------------------------------------------
-suppress_warnings = ['myst.header']
-
-# -- Multiversion settings ---------------------------------------------------
-smv_tag_whitelist = r'^.*$'
-smv_branch_whitelist = r'^.*$'
-
-# Build API documentation using Sphinx APIdoc, for every version
-smv_prebuild_command = "sphinx-apidoc -o api '../{}'".format(sourcelib)
+myst_footnote_transition = False

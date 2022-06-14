@@ -76,7 +76,7 @@ def fid_score(
     :param num_workers: The number of workers used for the data loaders.
     :param device: The device used to run the model. If it's None 'cuda' will be used, if available.
     :param verbose: Whether to enable verbose mode.
-    :return The FID score.
+    :return: The FID score.
     """
     if model is None:
         # Load the InceptionV3 model pretrained on ImageNet

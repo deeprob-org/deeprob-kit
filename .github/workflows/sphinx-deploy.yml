@@ -1,5 +1,5 @@
-# This is a workflow for pushing versioned documentation to the gh-pages branch
-name: Sphinx-MultiDoc
+# This is a workflow for pushing documentation to the gh-pages branch
+name: Sphinx-Deploy
 
 on:
   # Permits manual workflow dispatch
@@ -46,18 +46,17 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -r docs/requirements.txt
-          pip install git+https://github.com/samtygier-stfc/sphinx-multiversion.git@prebuild_command
 
-      # Build versioned documentation
+      # Build documentation
       - name: Build Versioned Documentation
         working-directory: docs
         run: make
 
-      # Deploy versioned documentation, using GitHub Pages
+      # Deploy documentation, using GitHub Pages
       - name: Deploy Documentation
         uses: peaceiris/actions-gh-pages@v3
         with:
           force_orphan: true
           enable_jekyll: false
-          publish_dir: docs/_build
+          publish_dir: docs/build/html
           github_token: ${{ secrets.GITHUB_TOKEN }}

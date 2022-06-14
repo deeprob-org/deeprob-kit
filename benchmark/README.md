@@ -1,4 +1,4 @@
-## Benchmark
+# Benchmark
 
 The `benchmark` directory contains benchmark scripts of models and algorithms implemented in the library.
 All the scripts can be launched by command line.

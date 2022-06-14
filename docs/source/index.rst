@@ -2,20 +2,21 @@ A Python library for Deep Probabilistic Modeling
 ================================================
 
 .. toctree::
-	:maxdepth: 1
-	:caption: Read Me
+	:maxdepth: 2
+	:caption: Home Page
 
-	markdown/home.md
-	markdown/docs.md
-	markdown/examples.md
-	markdown/experiments.md
-	markdown/benchmark.md
+	home.md
+	docs.md
+	examples.md
+	experiments.md
+	benchmark.md
+
 
 .. toctree::
 	:maxdepth: 5
 	:caption: API Modules
 
-	api/deeprob.rst
+	api/modules.rst
 
 Indices and tables
 ==================

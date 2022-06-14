@@ -1,4 +1,4 @@
-## Experiments
+# Experiments
 
 A collection of 29 binary datasets, which most of them are used in *Probabilistic Circuits* literature,
 can be found at [UCLA-StarAI-Binary-Datasets](https://github.com/UCLA-StarAI/Density-Estimation-Datasets).
@@ -14,14 +14,12 @@ The experiments scripts are available in the `experiments` directory and can be 
 by specifying the dataset and hyper-parameters.
 The following table shows the available experiments scripts.
 
-|      Experiment      |                                            Description                                         |
-|----------------------|------------------------------------------------------------------------------------------------|
-| energy.py            | Fit Sum-Product Networks (SPNs) and Normalizing Flows on energy functions. <sup>[1](#r1)</sup> |
-| spn.py               | Experiments for Sum-Product Networks (SPNs).                                                   |
-| ratspn.py            | Experiments for Randomized And Tensorized Sum-Product Networks (RAT-SPNs).                     |
-| dgcspn.py            | Experiments for Deep Generalized Convolutional Sum-Product Networks (DGC-SPNs).                |
-| flows.py             | Experiments for several Normalizing Flows models.                                              |
+|      Experiment      | Description                                                                     |
+|----------------------|---------------------------------------------------------------------------------|
+| energy.py            | Fit Sum-Product Networks (SPNs) and Normalizing Flows on energy functions. [^1] |
+| spn.py               | Experiments for Sum-Product Networks (SPNs).                                    |
+| ratspn.py            | Experiments for Randomized And Tensorized Sum-Product Networks (RAT-SPNs).      |
+| dgcspn.py            | Experiments for Deep Generalized Convolutional Sum-Product Networks (DGC-SPNs). |
+| flows.py             | Experiments for several Normalizing Flows models.                               |
 
-<b id="r1">1.</b> Rezende and Mohamed. [*Variational Inference with Normalizing Flows*][RezendeMohamed2015]. ICML (2015).
-
-[RezendeMohamed2015]: http://proceedings.mlr.press/v37/rezende15.pdf
+[^1]: Rezende and Mohamed. [*Variational Inference with Normalizing Flows*](http://proceedings.mlr.press/v37/rezende15.pdf). ICML (2015).
