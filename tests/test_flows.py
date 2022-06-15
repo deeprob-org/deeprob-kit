@@ -25,6 +25,13 @@ def assert_flow_inverse(flow, data):
     assert torch.allclose(orig_data, data, atol=5e-7)
 
 
+def assert_sampling_autograd(flow):
+    with torch.enable_grad():
+        samples = flow.rsample(64)
+        assert samples.requires_grad
+        samples.mean().backward()
+
+
 def test_squeeze_depth2d(data):
     squeezed_data = squeeze_depth2d(data)
     unsqueezed_data = unsqueeze_depth2d(squeezed_data)
@@ -66,6 +73,7 @@ def test_realnvp1d(flattened_data):
         dequantize=True, logit=0.01
     ).eval()
     assert_flow_inverse(realnvp, flattened_data)
+    assert_sampling_autograd(realnvp)
 
 
 def test_realnvp2d(data):
@@ -82,6 +90,7 @@ def test_realnvp2d(data):
         dequantize=True, logit=0.01
     ).eval()
     assert_flow_inverse(realnvp, data)
+    assert_sampling_autograd(realnvp)
 
 
 def test_maf(flattened_data):
@@ -98,3 +107,4 @@ def test_maf(flattened_data):
         dequantize=True, logit=0.01
     ).eval()
     assert_flow_inverse(maf, flattened_data)
+    assert_sampling_autograd(maf)

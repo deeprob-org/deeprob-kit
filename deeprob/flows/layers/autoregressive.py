@@ -54,6 +54,7 @@ class AutoregressiveLayer(Bijector):
 
         # Preserve the input ordering
         self.ordering = degrees[0]
+        self.inv_ordering = np.argsort(self.ordering)
 
         # Initialize the conditioner neural network
         layers = []
@@ -78,21 +79,46 @@ class AutoregressiveLayer(Bijector):
         return u, inv_log_det_jacobian
 
     def apply_forward(self, u: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        # If autograd is enabled then plug in the implementation that enables backpropagation
+        if torch.is_grad_enabled():
+            return self.__backprop_apply_forward(u)
+
         # Initialize arbitrarily
         x = torch.zeros_like(u)
         log_det_jacobian = torch.zeros_like(u)
 
         # This requires D iterations where D is the number of features
         # Get the parameters and apply the affine transformation (forward mode)
-        for i in range(self.in_features):
+        for i in self.inv_ordering:
             z = self.network(x)
             t, s = torch.chunk(z, chunks=2, dim=1)
             s = self.scale_act(s)
-            idx = np.argwhere(self.ordering == i).item()
-            x[:, idx] = u[:, idx] * torch.exp(s[:, idx]) + t[:, idx]
-            log_det_jacobian[:, idx] = s[:, idx]
+            x[:, i] = u[:, i] * torch.exp(s[:, i]) + t[:, i]
+            log_det_jacobian[:, i] = s[:, i]
         log_det_jacobian = torch.sum(log_det_jacobian, dim=1)
         return x, log_det_jacobian
+
+    def __backprop_apply_forward(self, u: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Forward implementation of an autoregressive layer that enables backpropagation (but slower).
+
+        :param u: The inputs.
+        :return: The transformed samples and the forward log-det-jacobian.
+        """
+        # Initialize arbitrarily, and unstack along the features dimension to enable backpropagation
+        x = list(torch.unbind(torch.zeros_like(u), dim=1))
+        ldj = list(torch.unbind(torch.zeros_like(u), dim=1))
+
+        # This requires D iterations where D is the number of features
+        # Get the parameters and apply the affine transformation (forward mode)
+        for i in self.inv_ordering:
+            z = self.network(torch.stack(x, dim=1))
+            t, s = torch.chunk(z, chunks=2, dim=1)
+            s = self.scale_act(s)
+            x[i] = u[:, i] * torch.exp(s[:, i]) + t[:, i]
+            ldj[i] = s[:, i]
+        log_det_jacobian = torch.sum(torch.stack(ldj, dim=1), dim=1)
+        return torch.stack(x, dim=1), log_det_jacobian
 
     def build_degrees_sequential(self, depth: int, units: int, reverse: bool) -> List[np.ndarray]:
         """
