@@ -98,8 +98,6 @@ class RealNVP2d(NormalizingFlow):
         :param channels: The number of output channels of each convolutional layer.
         :param affine: Whether to use affine transformation. If False then use only translation (as in NICE).
         """
-        if network not in ['resnet', 'densenet']:
-            raise ValueError("The neural network conditioner must be either 'resnet' or 'densenet'")
         if n_flows <= 0:
             raise ValueError("The number of coupling flow layers must be positive")
         if n_blocks <= 0:

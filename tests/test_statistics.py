@@ -54,6 +54,8 @@ def test_estimate_priors_joints(data, priors, joints):
     assert joints.dtype == data.dtype
     assert np.allclose(priors, priors)
     assert np.allclose(joints, joints)
+    with pytest.raises(ValueError):
+        estimate_priors_joints(data, alpha=-1.0)
 
 
 def test_estimate_mutual_information(priors, joints, mi):
@@ -68,6 +70,7 @@ def test_compute_mean_quantiles(data):
     assert np.allclose(mean_quantiles, [[0.2, 0.0], [1.0, 0.4]])
     with pytest.raises(ValueError):
         compute_mean_quantiles(data, 0)
+    with pytest.raises(ValueError):
         compute_mean_quantiles(data, len(data) + 1)
 
 
@@ -88,6 +91,11 @@ def test_compute_fid():
     assert compute_fid(m1, c1, m2, c2) == dim
     with pytest.raises(ValueError):
         compute_fid(m1[1:], m2, c1, c2)
+    with pytest.raises(ValueError):
         compute_fid(m1, c1[1:, 1:], m2, c2)
+    with pytest.raises(ValueError):
+        compute_fid(m1, c1, m2[1:], c2)
+    with pytest.raises(ValueError):
         compute_fid(np.stack([m1, m1]), c1, m2, c2)
+    with pytest.raises(ValueError):
         compute_fid(m1, c1, m2, np.stack([c2, c2]))

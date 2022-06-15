@@ -110,6 +110,8 @@ def test_save_load_json(binary_clt, evi_data):
     ll = binary_clt.log_likelihood(evi_data)
     with tempfile.TemporaryFile('r+') as f:
         save_binary_clt_json(binary_clt, f)
+        with pytest.raises(ValueError):
+            save_binary_clt_json(BinaryCLT([0, 1, 2], root=0), f)
         f.seek(0)
         loaded_clt = load_binary_clt_json(f)
     loaded_ll = loaded_clt.log_likelihood(evi_data)

@@ -66,6 +66,12 @@ def test_realnvp1d(flattened_data):
         dequantize=True, logit=0.01
     ).eval()
     assert_flow_inverse(realnvp, flattened_data)
+    with pytest.raises(ValueError):
+        RealNVP1d(10, n_flows=0)
+    with pytest.raises(ValueError):
+        RealNVP1d(10, depth=0)
+    with pytest.raises(ValueError):
+        RealNVP1d(10, units=0)
 
 
 def test_realnvp2d(data):
@@ -82,6 +88,14 @@ def test_realnvp2d(data):
         dequantize=True, logit=0.01
     ).eval()
     assert_flow_inverse(realnvp, data)
+    with pytest.raises(ValueError):
+        RealNVP2d((3, 8, 8), n_flows=0)
+    with pytest.raises(ValueError):
+        RealNVP2d((3, 8, 8), n_blocks=0)
+    with pytest.raises(ValueError):
+        RealNVP2d((3, 8, 8), channels=0)
+    with pytest.raises(NotImplementedError):
+        RealNVP2d((3, 8, 8), network='unknown')
 
 
 def test_maf(flattened_data):
@@ -98,3 +112,9 @@ def test_maf(flattened_data):
         dequantize=True, logit=0.01
     ).eval()
     assert_flow_inverse(maf, flattened_data)
+    with pytest.raises(ValueError):
+        MAF(10, n_flows=0)
+    with pytest.raises(ValueError):
+        MAF(10, depth=0)
+    with pytest.raises(ValueError):
+        MAF(10, units=0)

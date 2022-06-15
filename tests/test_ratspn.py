@@ -35,8 +35,11 @@ def test_region_graph():
     assert set(inner_region_vars.values()) == {2}
     with pytest.raises(ValueError):
         rg.make_layers(n_repetitions=-1)
+    with pytest.raises(ValueError):
         RegionGraph(n_features=-1, depth=1)
+    with pytest.raises(ValueError):
         RegionGraph(n_features=8, depth=0)
+    with pytest.raises(ValueError):
         RegionGraph(n_features=8, depth=4)
 
 
