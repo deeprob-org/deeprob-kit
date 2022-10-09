@@ -1,7 +1,7 @@
 # Documentation
 
 The source code documentation is hosted using GitHub Pages at
-[deeprob-org.github.io/deeprob-kit](https://deeprob-org.github.io/deeprob-kit/).
+[deeprob-kit.readthedocs.io/en/latest](https://deeprob-kit.readthedocs.io/en/latest/).
 
 The documentation is generated automatically by Sphinx, using sources stored in the `docs` directory
 (with a [*Read-the-Docs*](https://readthedocs.org/) theme).
