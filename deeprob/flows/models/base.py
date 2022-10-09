@@ -11,6 +11,8 @@ from deeprob.flows.utils import DequantizeLayer, LogitLayer
 
 
 class NormalizingFlow(ProbabilisticModel):
+    has_rsample = True
+
     def __init__(
         self,
         in_features,
@@ -144,6 +146,27 @@ class NormalizingFlow(ProbabilisticModel):
     def sample(self, n_samples: int, y: Optional[torch.Tensor] = None) -> torch.Tensor:
         # Sample from the base distribution
         x = self.in_base.sample([n_samples])
+
+        # Apply forward transformations
+        x, _ = self.apply_forward(x)
+
+        # Apply reversed preprocessing transformation
+        x, _ = self.unpreprocess(x)
+        return x
+
+    def rsample(self, n_samples: int, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """
+        Sample some values from the modeled distribution by reparametrization.
+        Unlike :func:`NormalizingFlow.sample`, this method allows backpropagation.
+
+        :param n_samples: The number of samples.
+        :param y: The samples labels. It can be None.
+        :return: The samples.
+        """
+        # Sample from the base distribution (should have rsample method)
+        if not self.in_base.has_rsample:
+            raise NotImplementedError("Base distribution must support parametrized sampling")
+        x = self.in_base.rsample([n_samples])
 
         # Apply forward transformations
         x, _ = self.apply_forward(x)

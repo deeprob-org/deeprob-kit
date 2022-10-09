@@ -11,6 +11,8 @@ from torch import distributions
 class ProbabilisticModel(abc.ABC, nn.Module):
     """Abstract Probabilistic Model base class."""
 
+    has_rsample = False
+
     def log_prob(self, x: torch.Tensor) -> torch.Tensor:
         """
         Compute the log-likelihood of a batched sample.
