@@ -1,33 +1,29 @@
 PYTHON    = python
 PYLINT    = pylint
-UNITTEST  = unittest
-COVERAGE  = coverage
+PYTEST    = pytest
 SETUP_SRC = setup.py
 
 SOURCE_DIR    = deeprob
-TEST_DIR      = test
+TESTS_DIR     = tests
 BENCHMARK_DIR = benchmark
 
 
 .PHONY: all clean
 
-# Print static code quality and coverage information to stdout
-all: pylint_cli coverage_cli
-
-# Clean all
-clean: clean_coverage clean_pip
+# Print static code quality, perform tests and build PIP package
+all: pylint pytest pip_package
 
 # Print static code quality to stdout
-pylint_cli:
+pylint:
 	$(PYLINT) "$(SOURCE_DIR)"
 
-# Print coverage information to stdout
-coverage_cli: unit_tests
-	$(COVERAGE) report
+# Run tests with HTML coverage output
+pytest:
+	$(PYTEST) "$(TESTS_DIR)" --cov "$(SOURCE_DIR)" --cov-report=html
 
-# Run unit tests
-unit_tests:
-	$(COVERAGE) run --source "$(SOURCE_DIR)" -m $(UNITTEST) discover --start-directory "$(TEST_DIR)"
+# Run tests for Codecov
+pytest_codecov:
+	$(PYTEST) "$(TESTS_DIR)" --cov "$(SOURCE_DIR)" --cov-report=xml
 
 # Run benchmarks
 benchmarks:
@@ -38,13 +34,10 @@ pip_upload: pip_package
 	$(PYTHON) -m twine upload dist/*
 
 # Build the PIP package
-pip_package: clean_pip $(SETUP_SRC)
+pip_package: $(SETUP_SRC)
 	$(PYTHON) $(SETUP_SRC) sdist bdist_wheel
 
-# Clean tests and coverage related files
-clean_coverage:
-	rm -rf .coverage
-
-# Clean PIP package related files
-clean_pip:
+# Clean files
+clean:
+	rm -rf .pytest_cache htmlcov .coverage coverage.xml
 	rm -rf dist build deeprob_kit.egg-info

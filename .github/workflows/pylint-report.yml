@@ -46,4 +46,4 @@ jobs:
       # Execute Pylint static analyser
       - name: Execute Pylint static analyser
         run: |
-          make pylint_cli
+          make pylint

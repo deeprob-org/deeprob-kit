@@ -311,10 +311,12 @@ def test_filter_nodes_by_type(dag_spn):
     assert (list(map(lambda x: type(x), sums_prods)) == [Sum, Product, Product, Product])
 
 
-def test_save_load_json(dag_spn, binary_square_data):
+def test_save_load_json(dag_spn, binary_square_data, cyclical_spn):
     ll = log_likelihood(dag_spn, binary_square_data)
     with tempfile.TemporaryFile('r+') as f:
         save_spn_json(dag_spn, f)
+        with pytest.raises(ValueError):
+            save_spn_json(cyclical_spn, f)
         f.seek(0)
         loaded_spn = load_spn_json(f)
     loaded_ll = log_likelihood(loaded_spn, binary_square_data)

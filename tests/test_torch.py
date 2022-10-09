@@ -22,7 +22,8 @@ def test_get_torch_classes():
     assert cls == optim.SGD
     with pytest.raises(ValueError):
         get_activation_class('unknown-activation')
-        get_activation_class('unknown-optimizer')
+    with pytest.raises(ValueError):
+        get_optimizer_class('unknown-optimizer')
 
 
 def test_initializers():
@@ -61,10 +62,12 @@ def test_callbacks():
     early_stopping(1.1, epoch=2)
     module.weight *= 2.0
     early_stopping(1.2, epoch=3)
+    assert isinstance("{}".format(early_stopping), str)
     assert early_stopping.should_stop
     assert not torch.equal(module.state_dict()['weight'], early_stopping.get_best_state()['weight'])
     with pytest.raises(ValueError):
         EarlyStopping(module, patience=0)
+    with pytest.raises(ValueError):
         EarlyStopping(module, delta=0.0)
 
 
@@ -132,6 +135,8 @@ def test_masked_linear():
         masked_linear(data),
         3.14 + torch.sum(2.0 * data * torch.tensor([[0.2, 0.5]]), dim=1, keepdim=True)
      )
+    with pytest.raises(ValueError):
+        MaskedLinear(2, 1, np.asarray([[0.2]]))
 
 
 def test_datasets():

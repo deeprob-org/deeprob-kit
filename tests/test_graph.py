@@ -38,6 +38,7 @@ def test_build_tree_structure(tree, scope):
            set(map(lambda x: (-1, x[1]) if x[0] == -1 else (scope[x[0]], x[1]), zip(tree, scope)))
     with pytest.raises(ValueError):
         build_tree_structure([0, 0, 1, 2, 3])
+    with pytest.raises(ValueError):
         build_tree_structure([-1, 0, -1, 2, 3])
 
 

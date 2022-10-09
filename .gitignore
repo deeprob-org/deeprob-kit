@@ -2,8 +2,10 @@
 venv
 __pycache__
 
+htmlcov
 .coverage
 coverage.xml
+
 build
 dist
 *.json
