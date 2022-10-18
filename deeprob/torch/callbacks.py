@@ -60,7 +60,7 @@ class EarlyStopping:
         :param loss: The validation loss measured.
         :param epoch: The current epoch.
         """
-        # Check if an __best_loss of the loss happened
+        # Check if an improvement of the loss happened
         if loss < self.__best_loss - self.delta:
             self.__best_loss = loss
             self.__best_epoch = epoch

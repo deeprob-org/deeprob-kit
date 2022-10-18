@@ -145,7 +145,9 @@ class NormalizingFlow(ProbabilisticModel):
     @torch.no_grad()
     def sample(self, n_samples: int, y: Optional[torch.Tensor] = None) -> torch.Tensor:
         # Sample from the base distribution
-        x = self.in_base.sample([n_samples])
+        if isinstance(self.in_base, distributions.Distribution):
+            n_samples = [n_samples]
+        x = self.in_base.sample(n_samples)
 
         # Apply forward transformations
         x, _ = self.apply_forward(x)
@@ -166,7 +168,9 @@ class NormalizingFlow(ProbabilisticModel):
         # Sample from the base distribution (should have rsample method)
         if not self.in_base.has_rsample:
             raise NotImplementedError("Base distribution must support parametrized sampling")
-        x = self.in_base.rsample([n_samples])
+        if isinstance(self.in_base, distributions.Distribution):
+            n_samples = [n_samples]
+        x = self.in_base.rsample(n_samples)
 
         # Apply forward transformations
         x, _ = self.apply_forward(x)
