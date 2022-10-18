@@ -13,7 +13,8 @@ from deeprob.spn.algorithms.evaluation import eval_bottom_up, eval_top_down
 def likelihood(
     root: Node,
     x: np.ndarray,
-    return_results: bool = False
+    return_results: bool = False,
+    n_jobs: int = 1
 ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Compute the likelihoods of the SPN given some inputs.
@@ -21,20 +22,23 @@ def likelihood(
     :param root: The root of the SPN.
     :param x: The inputs. They can be marginalized using NaNs.
     :param return_results: A flag indicating if this function must return the likelihoods of each node of the SPN.
-    :return: The likelihood values. Additionally it returns the likelihood values of each node.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
+    :return: The likelihood values. Additionally, it returns the likelihood values of each node.
     """
     return eval_bottom_up(
         root, x,
         leaf_func=node_likelihood,
         node_func=node_likelihood,
-        return_results=return_results
+        return_results=return_results,
+        n_jobs=n_jobs
     )
 
 
 def log_likelihood(
     root: Node,
     x: np.ndarray,
-    return_results: bool = False
+    return_results: bool = False,
+    n_jobs: int = 1
 ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Compute the logarithmic likelihoods of the SPN given some inputs.
@@ -42,23 +46,26 @@ def log_likelihood(
     :param root: The root of the SPN.
     :param x: The inputs. They can be marginalized using NaNs.
     :param return_results: A flag indicating if this function must return the log likelihoods of each node of the SPN.
-    :return: The log likelihood values. Additionally it returns the log likelihood values of each node.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
+    :return: The log likelihood values. Additionally, it returns the log likelihood values of each node.
     """
     return eval_bottom_up(
         root, x,
         leaf_func=node_log_likelihood,
         node_func=node_log_likelihood,
-        return_results=return_results
+        return_results=return_results,
+        n_jobs=n_jobs
     )
 
 
-def mpe(root: Node, x: np.ndarray, inplace: bool = False) -> np.ndarray:
+def mpe(root: Node, x: np.ndarray, inplace: bool = False, n_jobs: int = 1) -> np.ndarray:
     """
     Compute the Maximum Posterior Estimate of a SPN given some inputs.
 
     :param root: The root of the SPN.
     :param x: The inputs. They can be marginalized using NaNs.
     :param inplace: Whether to make inplace assignments.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
     :return: The NaN-filled inputs.
     """
     _, lls = log_likelihood(root, x, return_results=True)
@@ -67,7 +74,8 @@ def mpe(root: Node, x: np.ndarray, inplace: bool = False) -> np.ndarray:
             root, x, lls,
             leaf_func=leaf_mpe,
             sum_func=sum_mpe,
-            inplace=inplace
+            inplace=inplace,
+            n_jobs=n_jobs
         )
 
 

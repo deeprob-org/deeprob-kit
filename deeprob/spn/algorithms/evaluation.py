@@ -18,7 +18,7 @@ def eval_bottom_up(
     leaf_func_kwargs: Optional[dict] = None,
     node_func_kwargs: Optional[dict] = None,
     return_results: bool = False,
-    n_jobs: int = -1
+    n_jobs: int = 1
 ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Evaluate the SPN bottom up given some inputs and leaves and nodes evaluation functions.
@@ -31,7 +31,7 @@ def eval_bottom_up(
     :param node_func_kwargs: The optional parameters of the inner nodes evaluation function.
     :param return_results: A flag indicating if this function must return the log likelihoods of each node of the SPN.
     :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
-    :return: The outputs. Additionally it returns the output of each node.
+    :return: The outputs. Additionally, it returns the output of each node.
     :raises ValueError: If a parameter is out of domain.
     """
     if leaf_func_kwargs is None:
@@ -76,7 +76,7 @@ def eval_top_down(
     leaf_func_kwargs: Optional[dict] = None,
     sum_func_kwargs: Optional[dict] = None,
     inplace: bool = False,
-    n_jobs: int = -1
+    n_jobs: int = 1
 ) -> np.ndarray:
     """
     Evaluate the SPN top down given some inputs, the likelihoods of each node and a leaves evaluation function.

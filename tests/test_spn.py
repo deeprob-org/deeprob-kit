@@ -202,6 +202,11 @@ def test_complete_inference(spn_mle, spn_clt, complete_data):
     assert np.isclose(np.sum(ls).item(), 1.0)
     assert np.isclose(np.sum(np.exp(lls)).item(), 1.0)
 
+    p_ls = likelihood(spn_clt, complete_data, n_jobs=-1)
+    p_lls = log_likelihood(spn_clt, complete_data, n_jobs=-1)
+    assert np.isclose(p_ls, ls).all()
+    assert np.isclose(p_lls, lls).all()
+
 
 def test_mar_inference(spn_mle, spn_clt, evi_data, mar_data):
     evi_ll = log_likelihood(spn_mle, evi_data)
@@ -211,6 +216,9 @@ def test_mar_inference(spn_mle, spn_clt, evi_data, mar_data):
     evi_ll = log_likelihood(spn_clt, evi_data)
     mar_ll = log_likelihood(spn_clt, mar_data)
     assert np.all(mar_ll >= evi_ll)
+
+    p_mar_ll = log_likelihood(spn_clt, mar_data, n_jobs=-1)
+    assert np.isclose(p_mar_ll, mar_ll).all()
 
 
 def test_mpe_inference(spn_mle, spn_clt, evi_data, mar_data):
@@ -231,6 +239,12 @@ def test_mpe_complete_inference(binary_clt, complete_data, complete_mar_data, co
     spn = binary_clt.to_pc()
     complete_lls = log_likelihood(spn, complete_data)
     mpe_data = mpe(spn, complete_mar_data)
+    mpe_ids = binary_data_ids(mpe_data).tolist()
+    expected_mpe_ids = compute_mpe_ids(complete_mpe_data, complete_lls.squeeze())
+    assert mpe_ids == expected_mpe_ids
+
+    complete_lls = log_likelihood(spn, complete_data, n_jobs=-1)
+    mpe_data = mpe(spn, complete_mar_data, n_jobs=-1)
     mpe_ids = binary_data_ids(mpe_data).tolist()
     expected_mpe_ids = compute_mpe_ids(complete_mpe_data, complete_lls.squeeze())
     assert mpe_ids == expected_mpe_ids
