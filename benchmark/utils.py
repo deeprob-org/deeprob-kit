@@ -17,7 +17,7 @@ def deeprob_learn_binary_clt(data: np.ndarray) -> spn.BinaryCLT:
     scope = list(range(n_features))
     domain = [[0, 1]] * n_features
     clt = spn.BinaryCLT(scope, root=0)
-    clt.fit(data, domain, alpha=0.1, random_state=42)
+    clt.fit(data, domain, alpha=0.01)
     return clt
 
 
@@ -36,7 +36,7 @@ def spflow_learn_binary_clt(data: np.ndarray) -> CLTree:
     n_features = data.shape[1]
     scope = list(range(n_features))
     clt = CLTree(scope, data)
-    update_cltree_parameters_mle(clt, data, alpha=0.1)
+    update_cltree_parameters_mle(clt, data, alpha=0.01)
     return clt
 
 

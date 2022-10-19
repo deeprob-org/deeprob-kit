@@ -76,6 +76,16 @@ def benchmark_csampling(model: Union[spn.Node, spn.BinaryCLT], data: np.ndarray)
     return dts
 
 
+def benchmark_learnclt(data: np.ndarray) -> List[float]:
+    dts = list()
+    for i in range(args.num_reps):
+        start_time = time.perf_counter()
+        deeprob_learn_binary_clt(data)
+        end_time = time.perf_counter()
+        dts.append(end_time - start_time)
+    return dts
+
+
 if __name__ == '__main__':
     # Parse the arguments
     parser = argparse.ArgumentParser(
@@ -88,7 +98,7 @@ if __name__ == '__main__':
         'dataset', choices=BINARY_DATASETS + CONTINUOUS_DATASETS, help="The dataset"
     )
     parser.add_argument(
-        '--num-reps', type=int,  default=1, help="Number of repetitions"
+        '--num-reps', type=int,  default=10, help="Number of repetitions"
     )
     parser.add_argument(
         '--num-samples', type=int,  default=1000, help="The number of samples (used to benchmark sampling)"
@@ -99,7 +109,8 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--algs', type=str, help="The algorithms to benchmark, separated by a dot:\n"
-        + "Complete Evidence (evi), Marginal (mar), Most Probable Explaination (mpe), Conditional Sampling (csampling)",
+        + "Complete Evidence (evi), Marginal (mar), Most Probable Explaination (mpe), "
+        + "Conditional Sampling (csampling), Learn Chow-Liu Tree (learnclt)",
         default="evi.mar.mpe.csampling"
     )
     parser.add_argument(
@@ -117,6 +128,8 @@ if __name__ == '__main__':
     # Check arguments
     if args.model == 'binary-clt' and args.dataset in CONTINUOUS_DATASETS:
         raise ValueError("Cannot benchmark BinaryCLT on a continuous dataset")
+    if args.model != 'binary-clt' and 'learnclt' in args.algs:
+        raise ValueError("Cannot benchmark `learnclt` algorithm on a non-BinaryCLT model")
     if args.mar_prob <= 0.0 or args.mar_prob >= 1.0:
         raise ValueError("Invalid marginalization probability")
 
@@ -128,12 +141,12 @@ if __name__ == '__main__':
     if args.verbose:
         print(f"Preparing {args.dataset} ...")
     if args.dataset in BINARY_DATASETS:
-        data, _, _ = load_binary_dataset(
+        data, _, data_test = load_binary_dataset(
             '../experiments/datasets', args.dataset, raw=True
         )
     else:
         transform = DataStandardizer()
-        data, _, _ = load_continuous_dataset(
+        data, _, data_test = load_continuous_dataset(
             '../experiments/datasets', args.dataset, raw=True, random_state=args.seed
         )
         transform.fit(data)
@@ -178,9 +191,18 @@ if __name__ == '__main__':
             dts = benchmark_mpe(model, mar_data)
         elif alg == 'csampling':
             dts = benchmark_csampling(model, mar_data)
+        elif alg == 'learnclt':
+            dts = benchmark_learnclt(data)
+            learnclt_lls = model.log_likelihood(data_test)
+            learnclt_mu_ll, learnclt_std_ll = np.mean(learnclt_lls), 2.0 * np.std(learnclt_lls)
+            results['learnclt'] = {'ll': {'mu': learnclt_mu_ll.item(), 'std': learnclt_std_ll.item()}}
         else:
             raise ValueError("Unknown algorithm identifier")
-        results[alg] = {'mu_dt': np.mean(dts), 'std_dt': 2.0 * np.std(dts)}
+        dts_info = {'dt': {'mu': np.mean(dts), 'std': 2.0 * np.std(dts)}}
+        if alg in results:
+            results[alg].update(dts_info)
+        else:
+            results[alg] = dts_info
 
     # Save the benchmark results to file
     out_filepath = args.out_filepath
