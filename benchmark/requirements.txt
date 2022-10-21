@@ -1,3 +1,0 @@
-h5py
-pandas
-spflow==0.0.41

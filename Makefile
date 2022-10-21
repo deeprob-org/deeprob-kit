@@ -1,43 +1,46 @@
 PYTHON    = python
-PYLINT    = pylint
 PYTEST    = pytest
-SETUP_SRC = setup.py
+PYLINT    = pylint
+BLACK     = black
 
-SOURCE_DIR    = deeprob
-TESTS_DIR     = tests
-BENCHMARK_DIR = benchmark
+SOURCE_DIR = deeprob
+TESTS_DIR  = tests
 
 
 .PHONY: all clean
 
-# Print static code quality, perform tests and build PIP package
-all: pylint pytest pip_package
+# Perform tests and print static code quality
+all: pytest pylint
+
+# Run black (check only)
+black_check:
+	$(BLACK) "$(SOURCE_DIR)" --check --diff --color
+
+# Run black (format files)
+black:
+	$(BLACK) "$(SOURCE_DIR)"
+
+# Run tests with HTML coverage output
+pytest:
+	$(PYTEST) --cov "$(SOURCE_DIR)" --cov-report=html
+
+# Run tests for Codecov
+pytest_codecov:
+	$(PYTEST) --cov "$(SOURCE_DIR)" --cov-report=xml
 
 # Print static code quality to stdout
 pylint:
 	$(PYLINT) "$(SOURCE_DIR)"
-
-# Run tests with HTML coverage output
-pytest:
-	$(PYTEST) "$(TESTS_DIR)" --cov "$(SOURCE_DIR)" --cov-report=html
-
-# Run tests for Codecov
-pytest_codecov:
-	$(PYTEST) "$(TESTS_DIR)" --cov "$(SOURCE_DIR)" --cov-report=xml
-
-# Run benchmarks
-benchmarks:
-	for SCRIPT in $(wildcard $(BENCHMARK_DIR)/run_*.py); do PYTHONPATH=. $(PYTHON) $$SCRIPT; done
 
 # Upload the PIP package
 pip_upload: pip_package
 	$(PYTHON) -m twine upload dist/*
 
 # Build the PIP package
-pip_package: $(SETUP_SRC)
-	$(PYTHON) $(SETUP_SRC) sdist bdist_wheel
+pip_package:
+	$(PYTHON) -m build .
 
 # Clean files
 clean:
 	rm -rf .pytest_cache htmlcov .coverage coverage.xml
-	rm -rf dist build deeprob_kit.egg-info
+	rm -rf deeprob_kit.egg-info dist

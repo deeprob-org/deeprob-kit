@@ -6,7 +6,10 @@ The source code documentation is hosted using GitHub Pages at
 The documentation is generated automatically by Sphinx, using sources stored in the `docs` directory
 (with a [*Read-the-Docs*](https://readthedocs.org/) theme).
 
-If you wish to build the documentation yourself, you will need to install the dependencies listed in `requirements.txt`.
+If you wish to build the documentation yourself, you will need to install the required dependencies from the root directory as follows.
+```bash
+pip install -e .[docs]
+```
 Finally, it's possible to execute the Makefile script as following:
 ```shell
 # Clean existing documentation (optional)

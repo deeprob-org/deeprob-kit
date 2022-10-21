@@ -8,10 +8,13 @@ can be found at [MAF-Continuous-Datasets](https://zenodo.org/record/1161203#.Wmt
 In order to run the experiments, it is necessary to clone the repository.
 After downloading the datasets, they must be stored in the `experiments/datasets` directory to be able to
 run the experiments.
-Moreover, additional packages listed in `requirements.txt` are needed.
+Finally, install the development packages from the root directory as follows.
+```bash
+pip install -e .[develop]
+```
 
 The experiments scripts are available in the `experiments` directory and can be launched using the command line
-by specifying the dataset and hyper-parameters.
+by specifying the dataset and hyperparameters.
 The following table shows the available experiments scripts.
 
 |      Experiment      | Description                                                                     |
