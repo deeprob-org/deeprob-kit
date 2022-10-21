@@ -4,7 +4,7 @@ import random
 import argparse
 import numpy as np
 
-from typing import Union, List
+from typing import Union, List, Tuple
 
 from spn.algorithms.Sampling import sample_instances
 from spn.structure.Base import Node
@@ -22,7 +22,7 @@ from deeprob.utils import DataStandardizer
 from experiments.datasets import BINARY_DATASETS, CONTINUOUS_DATASETS, load_binary_dataset, load_continuous_dataset
 
 
-def benchmark_log_likelihood(model: Union[Node, CLTree], data: np.ndarray) -> List[float]:
+def benchmark_log_likelihood(model: Union[Node, CLTree], data: np.ndarray) -> Tuple[List[float], np.ndarray]:
     dts = list()
     if isinstance(model, CLTree):
         for i in range(args.num_reps):
@@ -30,18 +30,20 @@ def benchmark_log_likelihood(model: Union[Node, CLTree], data: np.ndarray) -> Li
             cltree_log_likelihood(model, data, dtype=np.float32)
             end_time = time.perf_counter()
             dts.append(end_time - start_time)
+        lls = cltree_log_likelihood(model, data, dtype=np.float32)
     elif isinstance(model, Node):
         for i in range(args.num_reps):
             start_time = time.perf_counter()
             log_likelihood(model, data, dtype=np.float32)
             end_time = time.perf_counter()
             dts.append(end_time - start_time)
+        lls = log_likelihood(model, data, dtype=np.float32)
     else:
         raise ValueError("Unknown model")
-    return dts
+    return dts, lls
 
 
-def benchmark_mpe(model: Union[Node, CLTree], data: np.ndarray) -> List[float]:
+def benchmark_mpe(model: Union[Node, CLTree], data: np.ndarray) -> Tuple[List[float], np.ndarray]:
     dts = list()
     if isinstance(model, CLTree):
         logprobs = np.empty(len(mar_data), dtype=np.float32)
@@ -51,18 +53,23 @@ def benchmark_mpe(model: Union[Node, CLTree], data: np.ndarray) -> List[float]:
             cltree_mpe(model, mar_data_copied, logprobs=logprobs)
             end_time = time.perf_counter()
             dts.append(end_time - start_time)
+        mpe_data = mar_data.copy()
+        cltree_mpe(model, mpe_data, logprobs=logprobs)
+        lls = cltree_log_likelihood(model, mpe_data.astype(np.int64), dtype=np.float32)
     elif isinstance(model, Node):
         for i in range(args.num_reps):
             start_time = time.perf_counter()
             mpe(model, data, in_place=False)
             end_time = time.perf_counter()
             dts.append(end_time - start_time)
+        mpe_data = mpe(model, data, in_place=False)
+        lls = log_likelihood(model, mpe_data, dtype=np.float32)
     else:
         raise ValueError("Unknown model")
-    return dts
+    return dts, lls
 
 
-def benchmark_csampling(model: Node, data: np.ndarray) -> List[float]:
+def benchmark_csampling(model: Node, data: np.ndarray) -> Tuple[List[float], np.ndarray]:
     assert not isinstance(model, CLTree)
     dts = list()
     rand_gen = np.random.RandomState(42)
@@ -72,9 +79,11 @@ def benchmark_csampling(model: Node, data: np.ndarray) -> List[float]:
             sample_instances(model, data, rand_gen=rand_gen, in_place=False)
             end_time = time.perf_counter()
             dts.append(end_time - start_time)
+        sampled_data = sample_instances(model, data, rand_gen=rand_gen, in_place=False)
+        lls = log_likelihood(model, sampled_data, dtype=np.float32)
     else:
         raise ValueError("Unknown model")
-    return dts
+    return dts, lls
 
 
 def benchmark_learnclt(data: np.ndarray) -> List[float]:
@@ -99,10 +108,7 @@ if __name__ == '__main__':
         'dataset', choices=BINARY_DATASETS + CONTINUOUS_DATASETS, help="The dataset"
     )
     parser.add_argument(
-        '--num-reps', type=int,  default=10, help="Number of repetitions"
-    )
-    parser.add_argument(
-        '--num-samples', type=int,  default=1000, help="The number of samples (used to benchmark sampling)"
+        '--num-reps', type=int,  default=1, help="Number of repetitions"
     )
     parser.add_argument(
         '--mar-prob', type=float, default=0.5,
@@ -125,9 +131,11 @@ if __name__ == '__main__':
 
     # Check arguments
     if args.model == 'binary-clt' and args.dataset in CONTINUOUS_DATASETS:
-        raise ValueError("Cannot benchmark BinaryCLT on a continuous dataset")
+        raise ValueError("Cannot benchmark Binary-CLT on a continuous dataset")
     if args.model != 'binary-clt' and 'learnclt' in args.algs:
-        raise ValueError("Cannot benchmark `learnclt` algorithm on a non-BinaryCLT model")
+        raise ValueError("Cannot benchmark `learnclt` algorithm on a non Binary-CLT model")
+    if args.model == 'binary-clt' and 'csampling' in args.algs:
+        raise ValueError("Cannot benchmark `csampling` algorithm on a Binary-CLT model")
     if args.mar_prob <= 0.0 or args.mar_prob >= 1.0:
         raise ValueError("Invalid marginalization probability")
 
@@ -139,12 +147,12 @@ if __name__ == '__main__':
     if args.verbose:
         print(f"Preparing {args.dataset} ...")
     if args.dataset in BINARY_DATASETS:
-        data, _, data_test = load_binary_dataset(
+        data, _, _ = load_binary_dataset(
             '../experiments/datasets', args.dataset, raw=True
         )
     else:
         transform = DataStandardizer()
-        data, _, data_test = load_continuous_dataset(
+        data, _, _ = load_continuous_dataset(
             '../experiments/datasets', args.dataset, raw=True, random_state=args.seed
         )
         transform.fit(data)
@@ -172,8 +180,7 @@ if __name__ == '__main__':
     results = {
         'model': args.model,
         'dataset': args.dataset,
-        'num-reps': args.num_reps,
-        'num-samples': args.num_samples
+        'num-reps': args.num_reps
     }
 
     # Benchmark algorithms
@@ -181,25 +188,20 @@ if __name__ == '__main__':
         if args.verbose:
             print("Benchmarking {} ...".format(alg))
         if alg == 'evi':
-            dts = benchmark_log_likelihood(model, data)
+            dts, lls = benchmark_log_likelihood(model, data)
         elif alg == 'mar':
-            dts = benchmark_log_likelihood(model, mar_data)
+            dts, lls = benchmark_log_likelihood(model, mar_data)
         elif alg == 'mpe':
-            dts = benchmark_mpe(model, mar_data)
+            dts, lls = benchmark_mpe(model, mar_data)
         elif alg == 'csampling':
-            dts = benchmark_csampling(model, mar_data)
+            dts, lls = benchmark_csampling(model, mar_data)
         elif alg == 'learnclt':
             dts = benchmark_learnclt(data)
-            learnclt_lls = cltree_log_likelihood(model, data_test, dtype=np.float32)
-            learnclt_mu_ll, learnclt_std_ll = np.mean(learnclt_lls), 2.0 * np.std(learnclt_lls)
-            results['learnclt'] = {'ll': {'mu': learnclt_mu_ll, 'std': learnclt_std_ll}}
         else:
             raise ValueError("Unknown algorithm identifier")
-        dts_info = {'dt': {'mu': np.mean(dts), 'std': 2.0 * np.std(dts)}}
-        if alg in results:
-            results[alg].update(dts_info)
-        else:
-            results[alg] = dts_info
+        results[alg] = {'dt': {'mu': np.mean(dts), 'std': 2.0 * np.std(dts)}}
+        if alg not in ['learnclt']:
+            results[alg].update({'ll': {'mu': np.mean(lls).item(), 'std': 2.0 * np.std(lls).item()}})
 
     # Save the benchmark results to file
     out_filepath = args.out_filepath
