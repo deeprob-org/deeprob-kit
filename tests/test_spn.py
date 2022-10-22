@@ -16,6 +16,7 @@ from deeprob.spn.structure.node import bfs, dfs_post_order, topological_order, t
 from deeprob.spn.structure.cltree import BinaryCLT
 from deeprob.spn.structure.leaf import Bernoulli, Gaussian
 from deeprob.spn.structure.io import save_spn_json, load_spn_json
+from deeprob.spn.learning.xpc import SD_LEVEL_1, SD_LEVEL_2
 from deeprob.spn.learning.learnspn import learn_spn
 from deeprob.spn.learning.wrappers import learn_estimator, learn_classifier
 from deeprob.spn.algorithms.structure import prune, marginalize
@@ -155,6 +156,42 @@ def spn_mle_classifier(evi_data):
         evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], class_idx=1,
         learn_leaf='binary-clt', split_cols='rdc', min_rows_slice=64, learn_leaf_kwargs={'to_pc': True},
         random_state=42, verbose=False
+    )
+
+
+@pytest.fixture
+def sd_xpc(evi_data):
+    return learn_estimator(
+        evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], method='xpc',
+        det=False, sd=True, min_part_inst=64, conj_len=3, arity=4,
+        use_greedy_ordering=False, random_seed=42
+    )
+
+
+@pytest.fixture
+def det_sd_xpc(evi_data):
+    return learn_estimator(
+        evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], method='xpc',
+        det=True, sd=True, min_part_inst=64, conj_len=3, arity=4,
+        use_greedy_ordering=True, random_seed=42
+    )
+
+
+@pytest.fixture
+def partial_sd_expc(evi_data):
+    return learn_estimator(
+        evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], method='ensemble-xpc',
+        ensemble_dim=10, det=False, sd_level=SD_LEVEL_1, min_part_inst=64, conj_len=3, arity=4,
+        random_seed=42
+    )
+
+
+@pytest.fixture
+def full_sd_expc(evi_data):
+    return learn_estimator(
+        evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], method='ensemble-xpc',
+        ensemble_dim=10, det=False, sd_level=SD_LEVEL_2, min_part_inst=64, conj_len=3, arity=4,
+        random_seed=42
     )
 
 
@@ -335,3 +372,22 @@ def test_save_load_json(dag_spn, binary_square_data, cyclical_spn):
         loaded_spn = load_spn_json(f)
     loaded_ll = log_likelihood(loaded_spn, binary_square_data)
     assert np.all(ll == loaded_ll)
+
+
+def test_xpc_properties(sd_xpc, det_sd_xpc, partial_sd_expc, full_sd_expc):
+    try:
+        check_spn(sd_xpc, smooth=True, decomposable=True, structured_decomposable=True)
+    except ValueError as e:
+        assert False, f"{e}"
+
+    try:
+        check_spn(det_sd_xpc, smooth=True, decomposable=True, structured_decomposable=True)
+    except ValueError as e:
+        assert False, f"{e}"
+
+    with pytest.raises(ValueError):
+        check_spn(partial_sd_expc, smooth=True, decomposable=True, structured_decomposable=True)
+    try:
+        check_spn(full_sd_expc, smooth=True, decomposable=True, structured_decomposable=True)
+    except ValueError as e:
+        assert False, f"{e}"
