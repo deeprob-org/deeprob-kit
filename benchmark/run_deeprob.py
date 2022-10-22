@@ -101,7 +101,7 @@ if __name__ == '__main__':
         'dataset', choices=BINARY_DATASETS + CONTINUOUS_DATASETS, help="The dataset"
     )
     parser.add_argument(
-        '--num-reps', type=int,  default=1, help="Number of repetitions"
+        '--num-reps', type=int,  default=10, help="Number of repetitions"
     )
     parser.add_argument(
         '--mar-prob', type=float, default=0.5,
