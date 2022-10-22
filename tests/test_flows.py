@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 import torch
+from torch import distributions
 
 from deeprob.flows.utils import squeeze_depth2d, unsqueeze_depth2d
 from deeprob.flows.utils import DequantizeLayer, LogitLayer
@@ -129,3 +130,27 @@ def test_maf(flattened_data):
     with pytest.raises(ValueError):
         MAF(10, units=0)
 
+
+def test_uniform_base_dist(flattened_data):
+    logit, (uniform_a, uniform_b) = 0.05, (-5.0, 5.0)
+    in_base = distributions.Uniform(
+        torch.full(flattened_data.shape[1:], fill_value=-5.0),
+        torch.full(flattened_data.shape[1:], fill_value=5.0)
+    )
+    realnvp = RealNVP1d(
+        flattened_data.shape[1:],
+        dequantize=True,
+        logit=logit,
+        batch_norm=False,
+        in_base=in_base
+    ).eval()
+    dequantize = DequantizeLayer(flattened_data.shape[1])
+    logit = LogitLayer(flattened_data.shape[1], alpha=logit)
+
+    dequantized_data, ildj1 = dequantize.apply_backward(flattened_data)
+    preprocessed_data, ildj2 = logit.apply_backward(dequantized_data)
+    lls = realnvp.log_prob(flattened_data)
+    uniform_pdfs = lls - ildj1 - ildj2
+
+    target_pdf = flattened_data.shape[1] * torch.log(torch.tensor(1.0 / (uniform_b - uniform_a)))
+    assert torch.allclose(torch.mean(uniform_pdfs), target_pdf)
