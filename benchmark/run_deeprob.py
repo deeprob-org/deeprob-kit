@@ -114,7 +114,7 @@ if __name__ == '__main__':
         default="evi.mar.mpe.csampling"
     )
     parser.add_argument(
-        '--n-jobs', type=int, default=1, help="The number of parallel jobs"
+        '--n-jobs', type=int, default=0, help="The number of parallel jobs"
     )
     parser.add_argument(
         '--out-filepath', type=str, help="JSON results filepath, defaults to deeprob-{model}-{dataset}.json",

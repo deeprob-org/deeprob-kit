@@ -14,7 +14,7 @@ def likelihood(
     root: Node,
     x: np.ndarray,
     return_results: bool = False,
-    n_jobs: int = 1
+    n_jobs: int = 0
 ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Compute the likelihoods of the SPN given some inputs.
@@ -22,7 +22,7 @@ def likelihood(
     :param root: The root of the SPN.
     :param x: The inputs. They can be marginalized using NaNs.
     :param return_results: A flag indicating if this function must return the likelihoods of each node of the SPN.
-    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention. Set to 0 to disable.
     :return: The likelihood values. Additionally, it returns the likelihood values of each node.
     """
     return eval_bottom_up(
@@ -38,7 +38,7 @@ def log_likelihood(
     root: Node,
     x: np.ndarray,
     return_results: bool = False,
-    n_jobs: int = 1
+    n_jobs: int = 0
 ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Compute the logarithmic likelihoods of the SPN given some inputs.
@@ -46,7 +46,7 @@ def log_likelihood(
     :param root: The root of the SPN.
     :param x: The inputs. They can be marginalized using NaNs.
     :param return_results: A flag indicating if this function must return the log likelihoods of each node of the SPN.
-    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention. Set to 0 to disable.
     :return: The log likelihood values. Additionally, it returns the log likelihood values of each node.
     """
     return eval_bottom_up(
@@ -58,18 +58,18 @@ def log_likelihood(
     )
 
 
-def mpe(root: Node, x: np.ndarray, inplace: bool = False, n_jobs: int = 1) -> np.ndarray:
+def mpe(root: Node, x: np.ndarray, inplace: bool = False, n_jobs: int = 0) -> np.ndarray:
     """
-    Compute the Maximum Posterior Estimate of a SPN given some inputs.
+    Compute the Most Probable Explanation of a SPN given some inputs.
 
     :param root: The root of the SPN.
     :param x: The inputs. They can be marginalized using NaNs.
     :param inplace: Whether to make inplace assignments.
-    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention. Set to 0 to disable.
     :return: The NaN-filled inputs.
     """
     _, lls = log_likelihood(root, x, return_results=True)
-    with ContextState(check_spn=False):  # We already checked the SPN in forward mode
+    with ContextState(check_spn=False):  # We've already checked the SPN in forward mode
         return eval_top_down(
             root, x, lls,
             leaf_func=leaf_mpe,

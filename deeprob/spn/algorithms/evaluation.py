@@ -1,13 +1,37 @@
 # MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
 
-from typing import Optional, Union, Tuple, Any, Callable
+from typing import Optional, Union, Tuple, List, Any, Callable
 
 import joblib
 import numpy as np
 
-from deeprob.spn.structure.leaf import Leaf
-from deeprob.spn.structure.node import Node, Sum, Product, topological_order_layered
 from deeprob.spn.utils.validity import check_spn
+from deeprob.spn.structure.leaf import Leaf
+from deeprob.spn.structure.node import Node, Sum, Product, topological_order, topological_order_layered
+
+
+def parallel_layerwise_eval(
+    layers: List[List[Node]],
+    eval_func: Callable[[Node], None],
+    reverse: bool = False,
+    n_jobs: int = -1
+):
+    """
+    Execute a function per node layerwise in parallel.
+
+    :param layers: The layers, i.e., the layered topological ordering.
+    :param eval_func: The evaluation function for a given node.
+    :param reverse: Whether to reverse the layered topological ordering.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
+    """
+    if reverse:
+        layers = reversed(layers)
+
+    # Run parallel threads using joblib
+    with joblib.parallel_backend('threading', n_jobs=n_jobs):
+        with joblib.Parallel() as parallel:
+            for layer in layers:
+                parallel(joblib.delayed(eval_func)(node) for node in layer)
 
 
 def eval_bottom_up(
@@ -18,7 +42,7 @@ def eval_bottom_up(
     leaf_func_kwargs: Optional[dict] = None,
     node_func_kwargs: Optional[dict] = None,
     return_results: bool = False,
-    n_jobs: int = 1
+    n_jobs: int = 0
 ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Evaluate the SPN bottom up given some inputs and leaves and nodes evaluation functions.
@@ -30,7 +54,7 @@ def eval_bottom_up(
     :param leaf_func_kwargs: The optional parameters of the leaf evaluation function.
     :param node_func_kwargs: The optional parameters of the inner nodes evaluation function.
     :param return_results: A flag indicating if this function must return the log likelihoods of each node of the SPN.
-    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention. Set to 0 to disable.
     :return: The outputs. Additionally, it returns the output of each node.
     :raises ValueError: If a parameter is out of domain.
     """
@@ -42,25 +66,30 @@ def eval_bottom_up(
     # Check the SPN
     check_spn(root, labeled=True, smooth=True, decomposable=True)
 
-    # Compute the layered topological ordering
-    layers = topological_order_layered(root)
-    if layers is None:
-        raise ValueError("SPN structure is not a directed acyclic graph (DAG)")
-
-    n_nodes, n_samples = sum(map(len, layers)), len(x)
-    ls = np.empty(shape=(n_nodes, n_samples), dtype=np.float32)
-
-    def eval_forward(node):
-        if isinstance(node, Leaf):
-            ls[node.id] = leaf_func(node, x[:, node.scope], **leaf_func_kwargs)
+    def eval_forward(n):
+        if isinstance(n, Leaf):
+            ls[n.id] = leaf_func(n, x[:, n.scope], **leaf_func_kwargs)
         else:
-            children_ls = np.stack([ls[c.id] for c in node.children], axis=1)
-            ls[node.id] = node_func(node, children_ls, **node_func_kwargs)
+            children_ls = np.stack([ls[c.id] for c in n.children], axis=1)
+            ls[n.id] = node_func(n, children_ls, **node_func_kwargs)
 
-    with joblib.parallel_backend('threading', n_jobs=n_jobs):
-        with joblib.Parallel() as parallel:
-            for layer in reversed(layers):
-                parallel(joblib.delayed(eval_forward)(node) for node in layer)
+    if n_jobs == 0:
+        # Compute the topological ordering
+        ordering = topological_order(root)
+        if ordering is None:
+            raise ValueError("SPN structure is not a directed acyclic graph (DAG)")
+        n_nodes, n_samples = len(ordering), len(x)
+        ls = np.empty(shape=(n_nodes, n_samples), dtype=np.float32)
+        for node in reversed(ordering):
+            eval_forward(node)
+    else:
+        # Compute the layered topological ordering
+        layers = topological_order_layered(root)
+        if layers is None:
+            raise ValueError("SPN structure is not a directed acyclic graph (DAG)")
+        n_nodes, n_samples = sum(map(len, layers)), len(x)
+        ls = np.empty(shape=(n_nodes, n_samples), dtype=np.float32)
+        parallel_layerwise_eval(layers, eval_forward, reverse=True, n_jobs=n_jobs)
 
     if return_results:
         return ls[root.id], ls
@@ -76,7 +105,7 @@ def eval_top_down(
     leaf_func_kwargs: Optional[dict] = None,
     sum_func_kwargs: Optional[dict] = None,
     inplace: bool = False,
-    n_jobs: int = 1
+    n_jobs: int = 0
 ) -> np.ndarray:
     """
     Evaluate the SPN top down given some inputs, the likelihoods of each node and a leaves evaluation function.
@@ -90,7 +119,7 @@ def eval_top_down(
     :param leaf_func_kwargs: The optional parameters of the leaf evaluation function.
     :param sum_func_kwargs: The optional parameters of the sum nodes evaluation function.
     :param inplace: Whether to make inplace assignments.
-    :param n_jobs: The number of parallel jobs. It follows the joblib's convention.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention. Set to 0 to disable.
     :return: The NaN-filled inputs.
     :raises ValueError: If a parameter is out of domain.
     """
@@ -102,40 +131,47 @@ def eval_top_down(
     # Check the SPN
     check_spn(root, labeled=True, smooth=True, decomposable=True)
 
-    # Compute the layered topological ordering
-    layers = topological_order_layered(root)
-    if layers is None:
-        raise ValueError("SPN structure is not a directed acyclic graph (DAG)")
-
     # Copy the input array, if not inplace mode
     if not inplace:
         x = np.copy(x)
 
-    # Build the array consisting of top-down path masks
-    n_nodes, n_samples = sum(map(len, layers)), len(x)
-    masks = np.zeros(shape=(n_nodes, n_samples), dtype=np.bool_)
-    masks[root.id] = True
-
-    def eval_backward(node):
-        if isinstance(node, Leaf):
-            mask = np.ix_(masks[node.id], node.scope)
-            x[mask] = leaf_func(node, x[mask], **leaf_func_kwargs)
-        elif isinstance(node, Product):
-            for c in node.children:
-                masks[c.id] |= masks[node.id]
-        elif isinstance(node, Sum):
-            children_lls = np.stack([lls[c.id] for c in node.children], axis=1)
-            branch = sum_func(node, children_lls, **sum_func_kwargs)
-            for i, c in enumerate(node.children):
-                masks[c.id] |= masks[node.id] & (branch == i)
+    def eval_backward(n):
+        if isinstance(n, Leaf):
+            mask = np.ix_(masks[n.id], n.scope)
+            x[mask] = leaf_func(n, x[mask], **leaf_func_kwargs)
+        elif isinstance(n, Product):
+            for c in n.children:
+                masks[c.id] |= masks[n.id]
+        elif isinstance(n, Sum):
+            children_lls = np.stack([lls[c.id] for c in n.children], axis=1)
+            branch = sum_func(n, children_lls, **sum_func_kwargs)
+            for i, c in enumerate(n.children):
+                masks[c.id] |= masks[n.id] & (branch == i)
         else:
-            raise NotImplementedError(
-                "Top down evaluation not implemented for node of type {}".format(node.__class__.__name__)
-            )
+            raise NotImplementedError(f"Top down evaluation not implemented for node of type {n.__class__.__name__}")
 
-    with joblib.parallel_backend('threading', n_jobs=n_jobs):
-        with joblib.Parallel() as parallel:
-            for layer in layers:
-                parallel(joblib.delayed(eval_backward)(node) for node in layer)
+    if n_jobs == 0:
+        # Compute the topological ordering
+        ordering = topological_order(root)
+        if ordering is None:
+            raise ValueError("SPN structure is not a directed acyclic graph (DAG)")
+        n_nodes, n_samples = len(ordering), len(x)
+
+        # Build the array consisting of top-down path masks
+        masks = np.zeros(shape=(n_nodes, n_samples), dtype=np.bool_)
+        masks[root.id] = True
+        for node in ordering:
+            eval_backward(node)
+    else:
+        # Compute the layered topological ordering
+        layers = topological_order_layered(root)
+        if layers is None:
+            raise ValueError("SPN structure is not a directed acyclic graph (DAG)")
+        n_nodes, n_samples = sum(map(len, layers)), len(x)
+
+        # Build the array consisting of top-down path masks
+        masks = np.zeros(shape=(n_nodes, n_samples), dtype=np.bool_)
+        masks[root.id] = True
+        parallel_layerwise_eval(layers, eval_backward, reverse=False, n_jobs=n_jobs)
 
     return x

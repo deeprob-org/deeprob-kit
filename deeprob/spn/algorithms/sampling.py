@@ -10,19 +10,20 @@ from deeprob.spn.algorithms.inference import log_likelihood
 from deeprob.spn.algorithms.evaluation import eval_top_down
 
 
-def sample(root: Node, x: np.ndarray, inplace: bool = False, n_jobs: int = 1) -> np.ndarray:
+def sample(root: Node, x: np.ndarray, inplace: bool = False, n_jobs: int = 0) -> np.ndarray:
     """
     Sample some features from the distribution represented by the SPN.
 
     :param root: The root of the SPN.
     :param x: The inputs with possible NaN values to fill with sampled values.
     :param inplace: Whether to make inplace assignments.
-    :param n_jobs: The number of parallel jobs. It follows the joblib's convention. Warning: disrupts seed determinism.
+    :param n_jobs: The number of parallel jobs. It follows the joblib's convention. Set to 0 to disable.
+     Warning: disrupts seed determinism.
     :return: The inputs that are NaN-filled with samples from appropriate distributions.
     """
     # First evaluate the SPN bottom-up, then top-down
     _, lls = log_likelihood(root, x, return_results=True, n_jobs=n_jobs)
-    with ContextState(check_spn=False):  # We already checked the SPN in forward mode
+    with ContextState(check_spn=False):  # We've already checked the SPN in forward mode
         return eval_top_down(
             root, x, lls,
             leaf_func=leaf_sample,
