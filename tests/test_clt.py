@@ -53,6 +53,29 @@ def binary_clt(evi_data):
     return clt
 
 
+@pytest.fixture
+def ld_evi_data(evi_data):
+    return evi_data[:, :4]
+
+
+@pytest.fixture
+def ld_binary_clt(ld_evi_data):
+    scope = list(range(ld_evi_data.shape[1]))
+    clt = BinaryCLT(scope, root=1)
+    clt.fit(ld_evi_data, [[0, 1]] * ld_evi_data.shape[1], alpha=0.01, random_state=42)
+    return clt
+
+
+@pytest.fixture
+def ld_complete_data():
+    return complete_binary_data(4)
+
+
+@pytest.fixture
+def ld_complete_mar_data():
+    return complete_marginalized_binary_data(4, [0, 2])
+
+
 def test_complete_inference(binary_clt, complete_data):
     ls = binary_clt.likelihood(complete_data)
     lls = binary_clt.log_likelihood(complete_data)
@@ -82,16 +105,27 @@ def test_mpe_complete_inference(binary_clt, complete_data, complete_mar_data, co
     assert mpe_ids == expected_mpe_ids
 
 
-def test_ancestral_sampling(binary_clt, evi_data):
-    evi_ll = binary_clt.log_likelihood(evi_data).mean()
-    samples = np.empty(shape=(1000, 10), dtype=np.float32)
-    approx_lls = list()
-    for _ in range(200):
-        samples[:] = np.nan
-        samples = binary_clt.sample(samples)
-        approx_lls.extend(binary_clt.log_likelihood(samples).squeeze().tolist())
-    approx_ll = np.mean(approx_lls).item()
-    assert np.isclose(evi_ll, approx_ll, atol=1e-3)
+def test_ancestral_sampling(ld_binary_clt, ld_complete_data):
+    ls = np.exp(ld_binary_clt.log_likelihood(ld_complete_data)).squeeze(axis=1)
+    nan_data = np.full((500_000, ld_complete_data.shape[1]), fill_value=np.nan, dtype=np.float32)
+    sampled_data = ld_binary_clt.sample(nan_data)
+    assert ~np.any(np.isnan(sampled_data))
+
+    sampled_data_ids = binary_data_ids(sampled_data)
+    ws = np.zeros(len(ld_complete_data), dtype=np.float32)
+    for x_id in sampled_data_ids:
+        ws[x_id] += 1.0
+    estimated_ls = ws / np.sum(ws)
+    assert np.allclose(ls, estimated_ls, atol=1e-3)
+
+
+def test_conditional_sampling(ld_binary_clt, ld_complete_data, ld_complete_mar_data):
+    sampled_data = ld_binary_clt.sample(ld_complete_data)
+    assert np.all(sampled_data == ld_complete_data)
+
+    sampled_data = ld_binary_clt.sample(ld_complete_mar_data)
+    assert ~np.any(np.isnan(sampled_data))
+    assert np.all(np.logical_xor(sampled_data == ld_complete_mar_data, np.isnan(ld_complete_mar_data)))
 
 
 def test_pc_conversion(binary_clt, evi_data, mar_data):
