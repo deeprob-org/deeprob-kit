@@ -128,7 +128,7 @@ def rdc_cca(i: int, j: int, features: List[np.ndarray]) -> float:
     :param features: The list of the features.
     :return: The RDC coefficient (the largest canonical correlation coefficient).
     """
-    cca = cross_decomposition.CCA(n_components=1, max_iter=128, tol=1e-3)
+    cca = cross_decomposition.CCA(n_components=1)
     x_cca, y_cca = cca.fit_transform(features[i], features[j])
     x_cca, y_cca = x_cca.squeeze(), y_cca.squeeze()
     return np.corrcoef(x_cca, y_cca)[0, 1]

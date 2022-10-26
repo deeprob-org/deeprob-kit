@@ -16,11 +16,13 @@ from deeprob.spn.structure.node import bfs, dfs_post_order, topological_order, t
 from deeprob.spn.structure.cltree import BinaryCLT
 from deeprob.spn.structure.leaf import Bernoulli, Gaussian
 from deeprob.spn.structure.io import save_spn_json, load_spn_json
+from deeprob.spn.learning.xpc import SD_LEVEL_1, SD_LEVEL_2
 from deeprob.spn.learning.learnspn import learn_spn
 from deeprob.spn.learning.wrappers import learn_estimator, learn_classifier
 from deeprob.spn.algorithms.structure import prune, marginalize
 from deeprob.spn.algorithms.inference import likelihood, log_likelihood, mpe
 from deeprob.spn.algorithms.moments import expectation, variance, skewness, kurtosis, moment
+from deeprob.spn.algorithms.sampling import sample
 
 
 @pytest.fixture
@@ -158,6 +160,66 @@ def spn_mle_classifier(evi_data):
     )
 
 
+@pytest.fixture
+def sd_xpc(evi_data):
+    return learn_estimator(
+        evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], method='xpc',
+        det=False, sd=True, min_part_inst=64, conj_len=3, arity=4,
+        use_greedy_ordering=False, random_seed=42
+    )
+
+
+@pytest.fixture
+def det_sd_xpc(evi_data):
+    return learn_estimator(
+        evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], method='xpc',
+        det=True, sd=True, min_part_inst=64, conj_len=3, arity=4,
+        use_greedy_ordering=True, random_seed=42
+    )
+
+
+@pytest.fixture
+def partial_sd_expc(evi_data):
+    return learn_estimator(
+        evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], method='ensemble-xpc',
+        ensemble_dim=10, det=False, sd_level=SD_LEVEL_1, min_part_inst=64, conj_len=3, arity=4,
+        random_seed=42
+    )
+
+
+@pytest.fixture
+def full_sd_expc(evi_data):
+    return learn_estimator(
+        evi_data, [Bernoulli] * evi_data.shape[1], [[0, 1]] * evi_data.shape[1], method='ensemble-xpc',
+        ensemble_dim=10, det=False, sd_level=SD_LEVEL_2, min_part_inst=64, conj_len=3, arity=4,
+        random_seed=42
+    )
+
+
+@pytest.fixture
+def ld_evi_data(evi_data):
+    return evi_data[:, :4]
+
+
+@pytest.fixture
+def ld_spn_mle(ld_evi_data):
+    return learn_estimator(
+        ld_evi_data, [Bernoulli] * ld_evi_data.shape[1], [[0, 1]] * ld_evi_data.shape[1],
+        learn_leaf='mle', split_rows='gmm', split_cols='gvs', min_rows_slice=64,
+        random_state=42, verbose=False
+    )
+
+
+@pytest.fixture
+def ld_complete_data():
+    return complete_binary_data(4)
+
+
+@pytest.fixture
+def ld_complete_mar_data():
+    return complete_marginalized_binary_data(4, [0, 2])
+
+
 def test_nodes_exceptions():
     with pytest.raises(ValueError):
         Sum()
@@ -250,6 +312,29 @@ def test_mpe_complete_inference(binary_clt, complete_data, complete_mar_data, co
     assert mpe_ids == expected_mpe_ids
 
 
+def test_ancestral_sampling(ld_spn_mle, ld_complete_data):
+    ls = np.exp(log_likelihood(ld_spn_mle, ld_complete_data))
+    sampled_data = np.full((500_000, ld_complete_data.shape[1]), fill_value=np.nan, dtype=np.float32)
+    sample(ld_spn_mle, sampled_data, inplace=True)
+    assert ~np.any(np.isnan(sampled_data))
+
+    sampled_data_ids = binary_data_ids(sampled_data)
+    ws = np.zeros(len(ld_complete_data), dtype=np.float32)
+    for x_id in sampled_data_ids:
+        ws[x_id] += 1.0
+    estimated_ls = ws / np.sum(ws)
+    assert np.allclose(ls, estimated_ls, atol=1e-3)
+
+
+def test_conditional_sampling(ld_spn_mle, ld_complete_data, ld_complete_mar_data):
+    sampled_data = sample(ld_spn_mle, ld_complete_data)
+    assert np.all(sampled_data == ld_complete_data)
+
+    sampled_data = sample(ld_spn_mle, ld_complete_mar_data)
+    assert ~np.any(np.isnan(sampled_data))
+    assert np.all(np.logical_xor(sampled_data == ld_complete_mar_data, np.isnan(ld_complete_mar_data)))
+
+
 def test_classifier(spn_mle, clf_data, evi_data):
     clf_data = mpe(spn_mle, clf_data)
     error_rate = np.mean(np.abs(clf_data[:, 1] - evi_data[:, 1]))
@@ -335,3 +420,22 @@ def test_save_load_json(dag_spn, binary_square_data, cyclical_spn):
         loaded_spn = load_spn_json(f)
     loaded_ll = log_likelihood(loaded_spn, binary_square_data)
     assert np.all(ll == loaded_ll)
+
+
+def test_xpc_properties(sd_xpc, det_sd_xpc, partial_sd_expc, full_sd_expc):
+    try:
+        check_spn(sd_xpc, smooth=True, decomposable=True, structured_decomposable=True)
+    except ValueError as e:
+        assert False, f"{e}"
+
+    try:
+        check_spn(det_sd_xpc, smooth=True, decomposable=True, structured_decomposable=True)
+    except ValueError as e:
+        assert False, f"{e}"
+
+    with pytest.raises(ValueError):
+        check_spn(partial_sd_expc, smooth=True, decomposable=True, structured_decomposable=True)
+    try:
+        check_spn(full_sd_expc, smooth=True, decomposable=True, structured_decomposable=True)
+    except ValueError as e:
+        assert False, f"{e}"

@@ -11,7 +11,7 @@ from deeprob.torch.constraints import ScaleClipper
 from deeprob.torch.initializers import dirichlet_
 from deeprob.torch.callbacks import EarlyStopping
 from deeprob.torch.metrics import RunningAverageMetric
-from deeprob.torch.transforms import Normalize, Quantize, Flatten, Reshape
+from deeprob.torch.transforms import Normalize, Quantize, Flatten, Reshape, RandomHorizontalFlip, TransformList
 from deeprob.torch.datasets import SupervisedDataset, UnsupervisedDataset, WrappedDataset
 
 
@@ -83,6 +83,14 @@ def test_metrics():
         ram(metric=1.0, num_samples=0)
 
 
+def test_transforms_list():
+    data = 255.0 * torch.rand(3, 20, 20)
+    normalize = Normalize(data.mean(), data.std())
+    flatten = Flatten(shape=data.shape)
+    transforms = TransformList([normalize, flatten])
+    assert torch.allclose(transforms.backward(transforms.forward(data)), data)
+
+
 def test_transforms_normalize():
     data = 2.0 * torch.randn(50, 10) + 1.0
     normalize = Normalize(data.mean(), data.std())
@@ -100,6 +108,13 @@ def test_transforms_quantize():
     assert torch.all(data_quantized >= 0.0) and torch.all(data_quantized <= 1.0)
     assert torch.all(data_dequantized >= 0.0) and torch.all(data_dequantized <= 1.0)
     assert torch.allclose(data_quantized, quantize(data_dequantized))
+
+
+def test_transforms_hflip():
+    data = torch.rand(3, 20, 20)
+    hflip = RandomHorizontalFlip(p=1.0 - 1e-15)
+    assert torch.allclose(data, hflip.backward(data))
+    assert torch.allclose(data[:, :, -torch.arange(data.shape[2]) + data.shape[2] - 1], hflip.forward(data))
 
 
 def test_transforms_flatten():
