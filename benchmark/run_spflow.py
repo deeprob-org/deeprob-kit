@@ -1,3 +1,4 @@
+import gc
 import time
 import json
 import random
@@ -187,6 +188,7 @@ if __name__ == '__main__':
     for alg in args.algs.split('.'):
         if args.verbose:
             print("Benchmarking {} ...".format(alg))
+        gc.disable()
         if alg == 'evi':
             dts, lls = benchmark_log_likelihood(model, data)
         elif alg == 'mar':
@@ -199,6 +201,7 @@ if __name__ == '__main__':
             dts = benchmark_learnclt(data)
         else:
             raise ValueError("Unknown algorithm identifier")
+        gc.enable()
         results[alg] = {'dt': {'mu': np.mean(dts), 'std': 2.0 * np.std(dts)}}
         if alg not in ['learnclt']:
             results[alg].update({'ll': {'mu': np.mean(lls).item(), 'std': 2.0 * np.std(lls).item()}})
