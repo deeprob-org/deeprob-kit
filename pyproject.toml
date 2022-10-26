@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=43.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["deeprob*"]
+
+[project]
+name = "deeprob-kit"
+version = "1.1.0"
+description = "A Python Library for Deep Probabilistic Modeling"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text="MIT" }
+keywords = [
+  "probabilistic-models",
+  "normalizing-flows",
+  "sum-product-networks",
+  "probabilistic-circuits"
+]
+authors = [
+  { name="Lorenzo Loconte", email="lorenzoloconte@outlook.it" },
+  { name="Gennaro Gala", email="g.gala@tue.nl" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "joblib",
+  "numpy",
+  "scipy",
+  "tqdm",
+  "torch",
+  "torchvision",
+  "scikit-learn<1.2.0",
+  "matplotlib",
+  "networkx<2.8.3",
+  "pydot"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/deeprob-org/deeprob-kit"
+"Bug Tracker" = "https://github.com/deeprob-org/deeprob-kit/issues"
+"Coverage" = "https://app.codecov.io/gh/deeprob-org/deeprob-kit"
+"Documentation" = "https://deeprob-kit.readthedocs.io/en/latest"
+
+[project.optional-dependencies]
+develop = [
+  "h5py",
+  "pandas",
+  "spflow==0.0.41",
+  "pytest>=7.0.0",
+  "pytest-cov>=3.0.0",
+  "pylint>=2.13.0",
+  "black>=22.1.0"
+]
+docs = [
+  "sphinx==5.0.1",
+  "sphinx-rtd-theme==1.0.0",
+  "myst-parser==0.18.0"
+]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = ["tests"]
+
+[tool.pylint.'MAIN']
+fail-under = 9.5
+extension-pkg-whitelist = "numpy"
+
+[tool.pylint.'FORMAT']
+max-line-length = 120
+
+[tool.pylint.'SIMILARITIES']
+min-similarity-lines = 15
+
+[tool.pylint.'TYPECHECK']
+generated-members = ["numpy.*", "torch.*"]
+
+[tool.pylint.'MESSAGE CONTROL']
+disable = [
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "invalid-name",
+  "use-dict-literal",
+  "use-list-literal",
+  "unspecified-encoding"
+]
+
+[tool.black]
+line-length = 120
+target-version = ["py38", "py39", "py310", "py311"]
+skip-string-normalization = true

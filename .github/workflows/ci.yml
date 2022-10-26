@@ -1,0 +1,53 @@
+# This is a workflow for running Continuous Integration (CI)
+name: Continuous-Integration
+
+on:
+  # Permits manual workflow dispatch
+  workflow_dispatch:
+
+  # Triggers the workflow on push events on the main branch
+  push:
+    branches:
+      - main
+
+  # Triggers the workflow on pull requests
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Setup a cached Python environment
+      - name: Setup Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+          cache: 'pip'
+          cache-dependency-path: 'pyproject.toml'
+
+      # Install PIP development dependencies
+      - name: Install PIP dependencies
+        run: |
+          pip install -e .[develop]
+
+      # Execute Pylint static analyser
+      - name: Execute Pylint static analyser
+        run: |
+          make pylint
+
+      # Run tests
+      - name: Run Tests
+        run: |
+          make pytest_codecov
+
+      # Upload coverage information on Codecov
+      - name: Upload Codecov
+        uses: codecov/codecov-action@v2
