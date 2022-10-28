@@ -10,7 +10,7 @@ from sklearn.datasets import load_diabetes
 
 from deeprob.spn.utils.statistics import compute_statistics
 from deeprob.spn.utils.filter import filter_nodes_by_type
-from deeprob.spn.utils.validity import check_spn
+from deeprob.spn.utils.validity import check_spn, are_compatible
 from deeprob.spn.structure.node import Sum, Product
 from deeprob.spn.structure.node import bfs, dfs_post_order, topological_order, topological_order_layered
 from deeprob.spn.structure.cltree import BinaryCLT
@@ -86,6 +86,15 @@ def gaussian_spn():
     s0.id, p0.id, p1.id = 0, 1, 2
     g0a.id, g1a.id, g0b.id, g1b.id = 3, 4, 5, 6
     return s0
+
+
+@pytest.fixture
+def compatible_gaussian_spn():
+    g0a, g1a = Gaussian(0, 0.0, 1.0), Gaussian(1, 0.0, 1.0)
+    p0 = Product(children=[g0a, g1a])
+    g0a.id, g1a.id = 1, 2
+    p0.id = 0
+    return p0
 
 
 @pytest.fixture
@@ -234,15 +243,7 @@ def test_nodes_exceptions():
         Product([0, 1], children=[Bernoulli(1), Bernoulli(1)])
 
 
-def test_validity(dag_spn):
-    spn = deepcopy(dag_spn)
-    spn.weights = 2.0 * spn.weights
-    with pytest.raises(ValueError):
-        check_spn(spn, smooth=True)
-    spn = deepcopy(dag_spn)
-    spn.children[0].children[0] = Bernoulli(1)
-    with pytest.raises(ValueError):
-        check_spn(spn, decomposable=True)
+def test_check_smooth_decomposable(dag_spn):
     spn = deepcopy(dag_spn)
     spn.id = 42
     with pytest.raises(ValueError):
@@ -251,6 +252,22 @@ def test_validity(dag_spn):
     spn.children[0].id = 42
     with pytest.raises(ValueError):
         check_spn(spn)
+
+    spn = deepcopy(dag_spn)
+    spn.children[0].children[0] = Bernoulli(1)
+    with pytest.raises(ValueError):
+        check_spn(spn, decomposable=True)
+
+    spn = deepcopy(dag_spn)
+    spn.children[0] = Bernoulli(1)
+    with pytest.raises(ValueError):
+        check_spn(spn, smooth=True)
+
+
+def test_check_compatibility(spn_mle, binary_clt, gaussian_spn, compatible_gaussian_spn):
+    spn_clt = binary_clt.to_pc()
+    assert are_compatible(spn_clt, spn_mle) is not None
+    assert are_compatible(gaussian_spn, compatible_gaussian_spn) is None
 
 
 def test_complete_inference(spn_mle, spn_clt, complete_data):

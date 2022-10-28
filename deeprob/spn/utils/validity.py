@@ -1,14 +1,12 @@
 # MIT License: Copyright (c) 2021 Lorenzo Loconte, Gennaro Gala
 
-from typing import Optional, List
-
-import numpy as np
+from typing import Optional, List, Tuple
 
 from deeprob.context import is_check_spn_enabled
 from deeprob.spn.structure.node import Node, Sum, Product
 from deeprob.spn.structure.leaf import Leaf
 from deeprob.spn.structure.cltree import BinaryCLT
-from deeprob.spn.utils.filter import collect_nodes, filter_nodes_by_type
+from deeprob.spn.utils.filter import collect_nodes
 
 
 def check_spn(
@@ -33,119 +31,32 @@ def check_spn(
     if not is_check_spn_enabled():  # Skip the checks entirely, if specified
         return
 
-    # Collect the nodes starting from the root node
+    # Collect the nodes starting from the root node (cache)
     nodes = collect_nodes(root)
 
     # Check the SPN nodes are correctly labeled
     if labeled:
         result = is_labeled(root, nodes=nodes)
         if result is not None:
-            raise ValueError("SPN is not correctly labeled: {}".format(result))
+            raise ValueError(f"SPN is not correctly labeled: {result}")
 
     # Check the SPN is smooth
     if smooth:
-        sum_nodes: List[Sum] = list(filter(lambda n: isinstance(n, Sum), nodes))
-        result = is_smooth(root, sum_nodes=sum_nodes)
+        result = is_smooth(root, nodes=nodes)
         if result is not None:
-            raise ValueError("SPN is not smooth: {}".format(result))
+            raise ValueError(f"SPN is not smooth: {result}")
 
     # Check the SPN is decomposable
     if decomposable:
-        product_nodes: List[Product] = list(filter(lambda n: isinstance(n, Product), nodes))
-        result = is_decomposable(root, product_nodes=product_nodes)
+        result = is_decomposable(root, nodes=nodes)
         if result is not None:
-            raise ValueError("SPN is not decomposable: {}".format(result))
+            raise ValueError(f"SPN is not decomposable: {result}")
 
     # Check the SPN is structured decomposable
     if structured_decomposable:
         result = is_structured_decomposable(root, nodes=nodes)
         if result is not None:
-            raise ValueError("SPN is not structured decomposable: {}".format(result))
-
-
-def is_smooth(root: Node, sum_nodes: Optional[List[Sum]] = None) -> Optional[str]:
-    """
-    Check if the SPN is smooth (or complete).
-    It checks that each child of a sum node has the same scope.
-    Furthermore, it checks that the sum of the weights of a sum node is close to 1.
-
-    :param root: The root of the SPN.
-    :param sum_nodes: The list of sum nodes. If None, it will be retrieved starting from the root node.
-    :return: None if the SPN is smooth, a reason otherwise.
-    """
-    if sum_nodes is None:
-        sum_nodes = filter_nodes_by_type(root, Sum)
-
-    for node in sum_nodes:
-        if not np.isclose(np.sum(node.weights), 1.0):
-            return "Weights of node #{} don't sum up to 1".format(node.id)
-        if len(node.children) == 0:
-            return "Sum node #{} has no children".format(node.id)
-        if len(node.children) != len(node.weights):
-            return "Weights and children length mismatch in node #{}".format(node.id)
-        if any(map(lambda c: set(c.scope) != set(node.scope), node.children)):
-            return "Children of Sum node #{} have different scopes".format(node.id)
-    return None
-
-
-def is_decomposable(root: Node, product_nodes: Optional[List[Product]] = None) -> Optional[str]:
-    """
-    Check if the SPN is decomposable (or consistent).
-    It checks that each child of a product node has disjointed scopes.
-
-    :param root: The root of the SPN.
-    :param product_nodes: The list of product nodes. If None, it will be retrieved starting from the root node.
-    :return: None if the SPN is decomposable, a reason otherwise.
-    """
-    if product_nodes is None:
-        product_nodes = filter_nodes_by_type(root, Product)
-
-    for node in product_nodes:
-        if len(node.children) == 0:
-            return "Product node #{} has no children".format(node.id)
-        s_scope = set(sum([c.scope for c in node.children], []))
-        if set(node.scope) != s_scope:
-            return "Children of Product node #{} don't have disjointed scopes".format(node.id)
-    return None
-
-
-def is_structured_decomposable(root: Node, nodes: Optional[List[Node]] = None, verbose: bool = False) -> Optional[str]:
-    """
-    Check if the PC is structured decomposable.
-    It checks that product nodes follow a vtree.
-    Note that if a PC is structured decomposable then it's also decomposable / consistent.
-
-    :param root: The root of the PC.
-    :param nodes: The list of nodes. If None, it will be retrieved starting from the root node.
-    :param verbose: if True, it prints the product nodes scopes in a relevant order.
-    :return: None if the PC is structured decomposable, a reason otherwise.
-    """
-    if nodes is None:
-        nodes = collect_nodes(root)
-
-    s_scope = set()
-    for n in nodes:
-        if isinstance(n, Product):
-            s_scope.add(tuple(sorted(n.scope)))
-        elif isinstance(n, BinaryCLT):
-            s_scope.update([tuple(sorted(scope)) for scope in n.get_scopes()])
-        elif not isinstance(n, Sum) and not isinstance(n, Leaf):
-            raise Exception("Case not yet considered for {} nodes".format(type(n)))
-    scopes = [set(t) for t in list(s_scope)]
-
-    # Ordering scopes is not needed, but useful for printing when verbose = True
-    if verbose:
-        scopes.sort(key=len)
-        for scope in scopes:
-            print(scope)
-
-    # Quadratic in the number of product nodes, but at least does not require a vtree structure
-    for s1 in scopes:
-        for s2 in scopes:
-            int_len = len(s1.intersection(s2))
-            if int_len != 0 and int_len != min(len(s1), len(s2)):
-                return "Intersection between scope {} and scope {}".format(s1, s2)
-    return None
+            raise ValueError(f"SPN is not structured decomposable: {result}")
 
 
 def is_labeled(root: Node, nodes: Optional[List[Node]] = None) -> Optional[str]:
@@ -170,3 +81,131 @@ def is_labeled(root: Node, nodes: Optional[List[Node]] = None) -> Optional[str]:
     if max(ids) != len(ids) - 1:
         return "Node ids are not consecutive"
     return None
+
+
+def is_smooth(root: Node, nodes: Optional[List[Node]] = None) -> Optional[str]:
+    """
+    Check if the SPN is smooth (or complete).
+    It checks that each child of a sum node has the same scope.
+
+    :param root: The root of the SPN.
+    :param nodes: The list of nodes. If None, it will be retrieved starting from the root node.
+    :return: None if the SPN is smooth, a reason otherwise.
+    """
+    if nodes is None:
+        nodes = collect_nodes(root)
+    sum_nodes: List[Sum] = list(filter(lambda n: isinstance(n, Sum), nodes))
+
+    for node in sum_nodes:
+        if len(node.children) == 0:
+            return f"Sum node #{node.id} has no children"
+        if len(node.children) != len(node.weights):
+            return f"Weights and children length mismatch in node #{node.id}"
+        if any(map(lambda c: set(c.scope) != set(node.scope), node.children)):
+            return f"Children of Sum node #{node.id} have different scopes"
+    return None
+
+
+def is_decomposable(root: Node, nodes: Optional[List[Node]] = None) -> Optional[str]:
+    """
+    Check if the SPN is decomposable (or consistent).
+    It checks that each child of a product node has disjointed scopes.
+
+    :param root: The root of the SPN.
+    :param nodes: The list of nodes. If None, it will be retrieved starting from the root node.
+    :return: None if the SPN is decomposable, a reason otherwise.
+    """
+    if nodes is None:
+        nodes = collect_nodes(root)
+    product_nodes: List[Product] = list(filter(lambda n: isinstance(n, Product), nodes))
+
+    for node in product_nodes:
+        if len(node.children) == 0:
+            return f"Product node #{node.id} has no children"
+        s_scope = set(sum([c.scope for c in node.children], []))
+        if set(node.scope) != s_scope:
+            return f"Children of Product node #{node.id} don't have disjointed scopes"
+    return None
+
+
+def is_structured_decomposable(root: Node, nodes: Optional[List[Node]] = None) -> Optional[str]:
+    """
+    Check if the PC is structured decomposable.
+    It checks that product nodes follow a vtree.
+    Note that if a PC is structured decomposable then it's also decomposable.
+
+    :param root: The root of the PC.
+    :param nodes: The list of nodes. If None, it will be retrieved starting from the root node.
+    :return: None if the PC is structured decomposable, a reason otherwise.
+    """
+    # Shortcut: a PC is structured decomposable if it is compatible with itself
+    if nodes is None:
+        nodes = collect_nodes(root)
+    return are_compatible(root, root, nodes_a=nodes, nodes_b=nodes)
+
+
+def are_compatible(
+    root_a: Node,
+    root_b: Node,
+    nodes_a: Optional[List[Node]] = None,
+    nodes_b: Optional[List[Node]] = None
+) -> Optional[str]:
+    """
+    Check if two PCs are compatible.
+
+    :param root_a: The root of the first PC.
+    :param root_b: The root of the second PC.
+    :param nodes_a: The list of nodes of the first PC. If None, it will be retrieved starting from the root node.
+    :param nodes_b: The list of nodes of the second PC. If None, it will be retrieved starting from the root node.
+    :return: None if the two PCs are compatible, a reason otherwise.
+    """
+    if nodes_a is None:
+        nodes_a = collect_nodes(root_a)
+    if nodes_b is None:
+        nodes_b = collect_nodes(root_b)
+
+    # Check smoothness and decomposability first
+    res = is_smooth(root_a, nodes_a)
+    if res is not None:
+        return f'First PC: {res}'
+    res = is_decomposable(root_a, nodes_a)
+    if res is not None:
+        return f'First PC: {res}'
+    res = is_smooth(root_b, nodes_b)
+    if res is not None:
+        return f'Second PC: {res}'
+    res = is_decomposable(root_b, nodes_b)
+    if res is not None:
+        return f'Second PC: {res}'
+
+    # Get scopes as sets
+    scopes_a = collect_scopes(nodes_a)
+    scopes_b = collect_scopes(nodes_b)
+    scopes_a = list(map(lambda s: set(s), scopes_a))
+    scopes_b = list(map(lambda s: set(s), scopes_b))
+
+    # Quadratic in the number of product nodes
+    for s1 in scopes_a:
+        for s2 in scopes_b:
+            int_len = len(s1.intersection(s2))
+            if int_len != 0 and int_len != min(len(s1), len(s2)):
+                return f"Incompatibility found between scope {s1} and scope {s2}"
+    return None
+
+
+def collect_scopes(nodes: List[Node]) -> List[Tuple[int]]:
+    """
+    Collect the scopes of each node.
+
+    :param nodes: The list of nodes.
+    :return: A list of scopes.
+    """
+    scopes = list()
+    for n in nodes:
+        if isinstance(n, Product):
+            scopes.append(tuple(sorted(n.scope)))
+        elif isinstance(n, BinaryCLT):
+            scopes.extend([tuple(sorted(scope)) for scope in n.get_scopes()])
+        elif not isinstance(n, Sum) and not isinstance(n, Leaf):
+            raise NotImplementedError(f"Case not considered for {type(n)} nodes")
+    return scopes
