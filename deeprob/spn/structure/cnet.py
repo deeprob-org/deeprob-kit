@@ -12,7 +12,7 @@ from deeprob.spn.structure.cltree import BinaryCLT
 class ORNode(Node):
     def __init__(
         self,
-        scope: Optional[List[int]] = None,
+        scope: Optional[List[int]],
         children: Optional[List[Node]] = None,
         weights: Optional[Union[List[float], np.ndarray]] = None,
         or_id: Optional[int] = None
@@ -63,7 +63,7 @@ class ORNode(Node):
 class BinaryCNet(ORNode):
     def __init__(
         self,
-        scope: Optional[List[int]] = None,
+        scope: Optional[List[int]],
         children: Optional[List[Node]] = None,
         weights: Optional[Union[List[float], np.ndarray]] = None,
         or_id: Optional[int] = None

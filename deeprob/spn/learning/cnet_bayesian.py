@@ -4,20 +4,24 @@ from typing import Optional, List
 import numpy as np
 from scipy.special import gammaln
 
-from deeprob.utils.statistics import compute_prior_counts, compute_joint_counts, estimate_priors_joints_bayesian
+from deeprob.utils.statistics import compute_prior_counts, compute_joint_counts, estimate_priors_joints
 from deeprob.spn.structure.cltree import BinaryCLT
 from deeprob.spn.structure.cnet import BinaryCNet
 
 
 def compute_or_bd_scores(
     data: np.ndarray,
-    ess: float = 0.1,
-    fracs: np.ndarray = None
+    ess: float = 0.1
 ):
+    """
+    Compute the BDeu scores for the candidate OR nodes given the data.
+
+    :param data: The binary data matrix.
+    :param ess: The equivalent sample size (ESS).
+    :return: The score array.
+    """
     n_samples, n_features = data.shape
-    if fracs is not None:
-        n_samples = np.sum(fracs)
-    prior_counts = compute_prior_counts(data=data, fracs=fracs)
+    prior_counts = compute_prior_counts(data=data)
     alpha_i = ess
     alpha_ik = ess / 2
     log_gamma_nodes = gammaln(alpha_i) - gammaln(n_samples + alpha_i) \
@@ -27,10 +31,16 @@ def compute_or_bd_scores(
 
 def compute_clt_bd_scores(
     data: np.ndarray,
-    ess: float = 0.1,
-    fracs: np.ndarray = None
+    ess: float = 0.1
 ):
-    joint_counts = compute_joint_counts(data=data, fracs=fracs)
+    """
+    Compute the pairwise BDeu scores for constructing a CLT given the data.
+
+    :param data: The binary data matrix.
+    :param ess: The equivalent sample size (ESS).
+    :return: The pairwise BDeu score matrix.
+    """
+    joint_counts = compute_joint_counts(data=data)
     alpha_ij = ess / 2
     alpha_ijk = ess / (2 * 2)
     parent_counts = np.sum(joint_counts, axis=-2)
@@ -42,11 +52,18 @@ def compute_clt_bd_scores(
 def estimate_clt_params_bayesian(
     clt: BinaryCLT,
     data: np.ndarray,
-    ess: float = 0.1,
-    fracs: np.ndarray = None
+    ess: float = 0.1
 ):
+    """
+    Compute the Bayesian posterior parameters for a CLT.
+
+    :param clt: The CLT.
+    :param data: The binary data matrix.
+    :param ess: The equivalent sample size (ESS).
+    :return: The CLT parameters in the log space.
+    """
     n_samples, n_features = data.shape
-    priors, joints = estimate_priors_joints_bayesian(data, ess=ess, fracs=fracs)
+    priors, joints = estimate_priors_joints(data, alpha=ess / 4)
 
     vs = np.arange(n_features)
     params = np.einsum('ikl,il->ilk', joints[vs, clt.tree], np.reciprocal(priors[clt.tree]))
@@ -62,6 +79,14 @@ def eval_tree_score(
     clt_scores: np.ndarray,
     or_scores: np.ndarray
 ):
+    """
+    Evaluate the BDeu score for a tree structure.
+
+    :param tree: The tree structure.
+    :param clt_scores: The pairwise score matrix.
+    :param or_scores: The OR score array.
+    :return: The BDeu score of the tree structure.
+    """
     root_idx = tree.argmin()
     parent_indices_no_root = np.delete(tree, obj=root_idx)
     child_indices_no_root = np.delete(np.arange(len(tree)), obj=root_idx)
@@ -71,17 +96,22 @@ def eval_tree_score(
 def select_cand_cuts(
     data: np.ndarray,
     ess: float = 0.1,
-    n_cand_cuts: int = 10,
-    fracs: np.ndarray = None
+    n_cand_cuts: int = 10
 ):
+    """
+    Select the candidate cutting nodes.
+
+    :param data: The binary data.
+    :param ess: The equivalent sample size (ESS).
+    :param n_cand_cuts: The number of candidate cutting nodes.
+    :return: The indices of the selected nodes.
+    """
     # Compute the counts
     n_samples, n_features = data.shape
-    if fracs is not None:
-        n_samples = np.sum(fracs)
-    counts_features = data.sum(axis=0) if fracs is None else (data.T * fracs).T.sum(axis=0)
+    counts_features = data.sum(axis=0)
 
-    prior_counts = compute_prior_counts(data, fracs=fracs)
-    joint_counts = compute_joint_counts(data, fracs=fracs)
+    prior_counts = compute_prior_counts(data)
+    joint_counts = compute_joint_counts(data)
     smoothing_joint, smoothing_prior = ess / 2, ess
     if ess < 0.01:
         prior_counts = prior_counts.astype(np.float64)
@@ -128,7 +158,7 @@ def learn_cnet_bd(
     :param cnet: The binary CNet.
     :param data: The training data.
     :param ess: The equivalent sample size (ESS).
-    :param n_cand_cuts: The number of candidate cut nodes.
+    :param n_cand_cuts: The number of candidate cutting nodes.
     :return: A binary CNet.
     """
     n_samples, n_features = data.shape
@@ -233,6 +263,14 @@ def learn_cnet_bic(
     alpha: float = 0.01,
     n_cand_cuts: int = 10,
 ):
+    """
+    Learn a binary CNet using the Bayesian Information Criterion (BIC) score.
+
+    :param data: The binary data.
+    :param alpha: The Laplace smoothing factor.
+    :param n_cand_cuts: The number of candidate cutting nodes.
+    :return: A binary CNet.
+    """
     n_samples, n_features = data.shape
     root = BinaryCNet(scope=list(range(n_features)))
     root.assign_indices(row_indices=np.arange(n_samples), col_indices=np.arange(n_features))

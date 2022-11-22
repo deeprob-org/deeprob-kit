@@ -183,13 +183,16 @@ def compute_fid(
 
 
 def compute_prior_counts(
-    data: np.ndarray,
-    fracs: np.ndarray = None
+    data: np.ndarray
 ):
+    """
+    Compute the counts of the values of an RV given the data.
+
+    :param data: The binary data matrix.
+    :return: The counts.
+    """
     n_samples, n_features = data.shape
-    if fracs is not None:
-        n_samples = np.sum(fracs)
-    counts_features = data.sum(axis=0) if fracs is None else (data.T * fracs).T.sum(axis=0)
+    counts_features = data.sum(axis=0)
 
     # Compute the prior counts
     prior_counts = np.empty(shape=(n_features, 2), dtype=np.float32)
@@ -199,13 +202,16 @@ def compute_prior_counts(
 
 
 def compute_joint_counts(
-    data: np.ndarray,
-    fracs: np.ndarray = None
+    data: np.ndarray
 ):
+    """
+    Compute the counts of the configurations of an RV and its parent given the data.
+
+    :param data: The binary data matrix.
+    :return: The counts.
+    """
     n_samples, n_features = data.shape
-    if fracs is not None:
-        n_samples = np.sum(fracs)
-    counts_ones = np.dot(data.T, data) if fracs is None else np.dot(data.T, (data.T * fracs).T)
+    counts_ones = np.dot(data.T, data)
     counts_features = np.diag(counts_ones)
     counts_cols = counts_features * np.ones_like(counts_ones)
     counts_rows = np.transpose(counts_cols)
@@ -217,48 +223,3 @@ def compute_joint_counts(
     joint_counts[:, :, 1, 0] = counts_rows - counts_ones
     joint_counts[:, :, 1, 1] = counts_ones
     return joint_counts
-
-
-def estimate_priors_joints_bayesian(
-    data: np.ndarray,
-    ess: float = 0.1,
-    fracs: np.ndarray = None
-):
-    if ess < 0.0:
-        raise ValueError("The ESS must be non-negative")
-
-    # Check the data dtype
-    if data.dtype != np.float32:
-        data = data.astype(np.float32)
-
-    # Compute the counts
-    n_samples, n_features = data.shape
-    if fracs is not None:
-        n_samples = np.sum(fracs)
-    counts_ones = np.dot(data.T, data).astype(np.float64) if fracs is None \
-        else np.dot(data.T * fracs, data).astype(np.float64)
-    counts_features = np.diag(counts_ones).astype(np.float64)
-    counts_cols = (counts_features * np.ones_like(counts_ones)).astype(np.float64)
-    counts_rows = np.transpose(counts_cols).astype(np.float64)
-
-    # Compute the prior probabilities
-    priors = np.empty(shape=(n_features, 2), dtype=np.float64)
-    priors[:, 1] = (counts_features + ess / 2) / (n_samples + ess)
-    priors[:, 0] = 1.0 - priors[:, 1]
-
-    # Compute the joints probabilities
-    joints = np.empty(shape=(n_features, n_features, 2, 2), dtype=np.float64)
-    joints[:, :, 0, 0] = n_samples - counts_cols - counts_rows + counts_ones
-    joints[:, :, 0, 1] = counts_cols - counts_ones
-    joints[:, :, 1, 0] = counts_rows - counts_ones
-    joints[:, :, 1, 1] = counts_ones
-    joints = (joints + ess / 4) / (n_samples + ess)
-
-    # Correct smoothing on the diagonal of joints array
-    idx_features = np.arange(n_features)
-    joints[idx_features, idx_features, 0, 0] = priors[:, 0]
-    joints[idx_features, idx_features, 0, 1] = 0.0
-    joints[idx_features, idx_features, 1, 0] = 0.0
-    joints[idx_features, idx_features, 1, 1] = priors[:, 1]
-
-    return priors, joints
