@@ -180,3 +180,46 @@ def compute_fid(
 
     # Return the final FID score
     return diffmdot + np.trace(cov1) + np.trace(cov2) - 2.0 * np.trace(sqrtcov)
+
+
+def compute_prior_counts(
+    data: np.ndarray
+):
+    """
+    Compute the counts of the values of an RV given the data.
+
+    :param data: The binary data matrix.
+    :return: The counts.
+    """
+    n_samples, n_features = data.shape
+    counts_features = data.sum(axis=0)
+
+    # Compute the prior counts
+    prior_counts = np.empty(shape=(n_features, 2), dtype=np.float32)
+    prior_counts[:, 1] = counts_features
+    prior_counts[:, 0] = n_samples - prior_counts[:, 1]
+    return prior_counts
+
+
+def compute_joint_counts(
+    data: np.ndarray
+):
+    """
+    Compute the counts of the configurations of an RV and its parent given the data.
+
+    :param data: The binary data matrix.
+    :return: The counts.
+    """
+    n_samples, n_features = data.shape
+    counts_ones = np.dot(data.T, data)
+    counts_features = np.diag(counts_ones)
+    counts_cols = counts_features * np.ones_like(counts_ones)
+    counts_rows = np.transpose(counts_cols)
+
+    # Compute the joint counts
+    joint_counts = np.empty(shape=(n_features, n_features, 2, 2), dtype=np.float32)
+    joint_counts[:, :, 0, 0] = n_samples - counts_cols - counts_rows + counts_ones
+    joint_counts[:, :, 0, 1] = counts_cols - counts_ones
+    joint_counts[:, :, 1, 0] = counts_rows - counts_ones
+    joint_counts[:, :, 1, 1] = counts_ones
+    return joint_counts
