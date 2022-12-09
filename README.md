@@ -8,20 +8,20 @@
 
 # DeeProb-kit
 
-**DeeProb-kit** is a general-purpose Python library providing a collection of deep probabilistic models (DPMs) which
-are easy to use and extend.
-It also includes efficiently implemented learning techniques, inference routines and statistical algorithms.
-The availability of a representative selection of the most common DPMs in a single library makes it possible to combine
-them in a straightforward manner, a common practice in deep learning research nowadays, which however is still missing
-for certain class of models. 
-Moreover, **DeeProb-kit** provides high-quality fully-documented APIs, and it will help the community to accelerate research
-on DPMs as well as improve experiments' reproducibility.
+DeeProb-kit is a unified library written in Python consisting of a collection of deep probabilistic models (DPMs) that
+are tractable and exact representations for the modelled probability distributions. The availability of a representative
+selection of DPMs in a single library makes it possible to combine them in a straightforward manner, a common practice
+in deep learning research nowadays. In addition, it includes efficiently implemented learning techniques, inference
+routines, statistical algorithms, and provides high-quality fully-documented APIs. The development of DeeProb-kit will
+help the community to accelerate research on DPMs as well as to standardise their evaluation and better understand how
+they are related based on their expressivity. 
 
 ## Features
 
 - Inference algorithms for SPNs. [^1] [^4]
 - Learning algorithms for SPNs structure. [^1] [^2] [^3] [^4] [^5]
-- Chow-Liu Trees (CLT) as SPN leaves. [^12] [^13]
+- Chow-Liu Trees (CLT) as SPN leaves. [^13]
+- Cutset Networks (CNets) with various learning criteria. [^12]
 - Batch Expectation-Maximization (EM) for SPNs with arbitrarily leaves. [^14] [^15]
 - Structural marginalization and pruning algorithms for SPNs.
 - High-order moments computation for SPNs.
@@ -35,17 +35,18 @@ on DPMs as well as improve experiments' reproducibility.
 
 The collection of implemented models is summarized in the following table.
 
-| Model      | Description                                        |
-|------------|----------------------------------------------------|
-| Binary-CLT | Binary Chow-Liu Tree (CLT)                         |
-| SPN        | Vanilla Sum-Product Network                        |
-| MSPN       | Mixed Sum-Product Network                          |
-| XPC        | Random Probabilistic Circuit                       |
-| RAT-SPN    | Randomized and Tensorized Sum-Product Network      |
-| DGC-SPN    | Deep Generalized Convolutional Sum-Product Network |
-| MAF        | Masked Autoregressive Flow                         |
-| NICE       | Non-linear Independent Components Estimation Flow  |
-| RealNVP    | Real-valued Non-Volume-Preserving Flow             |
+| Model       | Description                                        |
+|-------------|----------------------------------------------------|
+| Binary-CLT  | Binary Chow-Liu Tree (CLT)                         |
+| Binary-CNet | Binary Cutset Network (CNet)                       |
+| SPN         | Vanilla Sum-Product Network                        |
+| MSPN        | Mixed Sum-Product Network                          |
+| XPC         | Random Probabilistic Circuit                       |
+| RAT-SPN     | Randomized and Tensorized Sum-Product Network      |
+| DGC-SPN     | Deep Generalized Convolutional Sum-Product Network |
+| MAF         | Masked Autoregressive Flow                         |
+| NICE        | Non-linear Independent Components Estimation Flow  |
+| RealNVP     | Real-valued Non-Volume-Preserving Flow             |
 
 ## Installation
 
@@ -66,6 +67,19 @@ The documentation is generated automatically by Sphinx using sources stored in t
 A collection of code examples and experiments can be found in the [examples](examples) and [experiments](experiments)
 directories respectively.
 Moreover, benchmark code can be found in the [benchmark](benchmark) directory.
+
+## Cite
+
+```
+@misc{loconte2022deeprob,
+  doi = {10.48550/ARXIV.2212.04403},
+  url = {https://arxiv.org/abs/2212.04403},
+  author = {Loconte, Lorenzo and Gala, Gennaro},
+  title = {{DeeProb-kit}: a Python Library for Deep Probabilistic Modelling},
+  publisher = {arXiv},
+  year = {2022}
+}
+```
 
 ## Related Repositories
 
