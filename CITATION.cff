@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this library, please cite it as below."
+authors:
+- family-names: "Loconte"
+  given-names: "Lorenzo"
+- family-names: "Gala"
+  given-names: "Gennaro"
+title: "DeeProb-kit: a Python Library for Deep Probabilistic Modelling"
+version: 1.1.0
+doi: 10.48550/arXiv.2212.04403
+date-released: 2021-12-09
+license: MIT
+url: "https://github.com/deeprob-org/deeprob-kit"
