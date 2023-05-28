@@ -181,11 +181,13 @@ def gtest(
     if distributions[i].LEAF_TYPE == LeafType.DISCRETE and distributions[j].LEAF_TYPE == LeafType.DISCRETE:
         b1 = domains[i] + [len(domains[i])]
         b2 = domains[j] + [len(domains[j])]
-        hist, _, _ = np.histogram2d(x1, x2, bins=[b1, b2])
     elif distributions[i].LEAF_TYPE == LeafType.CONTINUOUS and distributions[j].LEAF_TYPE == LeafType.CONTINUOUS:
-        hist, _, _ = np.histogram2d(x1, x2, bins='scott')
+        b1 = np.histogram_bin_edges(x1, bins='fd')
+        b2 = np.histogram_bin_edges(x2, bins='fd')
+        hist, _, _ = np.histogram2d(x1, x2, bins=[b1, b2])
     else:
         raise ValueError("Leaves distributions must be either discrete or continuous")
+    hist, _, _ = np.histogram2d(x1, x2, bins=[b1, b2])
 
     # Compute G-test statistics
     hist = hist.astype(np.float32) + np.finfo(np.float32).eps
