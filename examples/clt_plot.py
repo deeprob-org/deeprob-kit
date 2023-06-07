@@ -1,11 +1,14 @@
 import numpy as np
-from sklearn.datasets import load_boston
+import pandas as pd
 
 import deeprob.spn.structure as spn
 
 if __name__ == '__main__':
     # Load the boston dataset and binarize it
-    data, _ = load_boston(return_X_y=True)
+    data_url = "http://lib.stat.cmu.edu/datasets/boston"
+    raw_df = pd.read_csv(data_url, sep="\s+", skiprows=22, header=None)
+    data = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
+
     avg_features = np.mean(data, axis=0)
     data = (data < avg_features).astype(np.float32)
     n_samples, n_features = data.shape
